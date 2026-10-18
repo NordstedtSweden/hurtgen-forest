@@ -1,0 +1,16 @@
+{
+  "name": "Surviving in Hürtgen Forest",
+  "short_name": "Hürtgen",
+  "description": "Överlev striderna i Hürtgenskogen 1944.",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#15180f",
+  "theme_color": "#15180f",
+  "lang": "sv",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
