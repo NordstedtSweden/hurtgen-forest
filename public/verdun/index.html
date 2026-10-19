@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1a1510">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>Verdun 1916</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<script src="/common.js"></script>
+<style>
+/* Lera, rök och horisontblått. En karta över vägen från Bar-le-Duc till fronten, sektorkorten till höger. */
+:root{
+  color-scheme:dark;
+  --bg:#1a1510; --panel:#221c15ee; --line:#56483a; --text:#ebe2cf; --muted:#a99c86;
+  --accent:#c99a5b; --blue:#7f97ad; --danger:#c4553a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;
+  font-family:"Special Elite",ui-monospace,monospace;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{display:block;position:fixed;inset:0}
+.screen{position:fixed;inset:0;display:flex;align-items:safe center;justify-content:center;padding-block:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:radial-gradient(ellipse at 50% 30%,#3a2e22bb,#0f0c09ee);z-index:10;overflow-y:auto}
+.screen.hidden{display:none}
+.card{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px 18px;box-shadow:0 10px 40px #000a;text-align:center}
+.col{min-width:0}
+h1{font-family:Oswald,sans-serif;font-weight:700;letter-spacing:.04em;margin:0;font-size:34px;line-height:1.05;text-transform:uppercase;color:var(--accent)}
+h1 small{display:block;font-size:15px;color:var(--text);letter-spacing:.3em;margin-bottom:4px}
+h2{font-family:Oswald,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px;font-size:24px}
+p{line-height:1.45;font-size:14px;color:var(--muted);margin:10px 0}
+.brief{text-align:left;font-size:13px;border-left:3px solid var(--accent);padding:4px 0 4px 10px;margin:14px 0}
+.btn{display:block;width:100%;margin:10px 0 0;padding:14px;border:1px solid var(--accent);border-radius:4px;background:var(--accent);
+  color:#1d150c;font-family:Oswald,sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible,.ibtn:focus-visible,input:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+input{width:100%;padding:12px;margin-top:10px;font:inherit;font-size:17px;background:#120e0a;color:var(--text);border:1px solid var(--line);border-radius:4px;text-align:center}
+.tips{text-align:left;font-size:12.5px;color:var(--muted);margin:8px 0 0;padding-left:18px}
+.tips li{margin:4px 0}
+.tips b{color:var(--text)}
+.big{font-family:Oswald,sans-serif;font-size:52px;color:var(--accent);margin:4px 0}
+.stats{display:flex;justify-content:space-around;gap:6px;font-size:13px;color:var(--muted);margin:6px 0 4px}
+.stats b{display:block;color:var(--text);font-size:18px;font-family:Oswald,sans-serif}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+td{padding:6px 4px;border-bottom:1px solid #ffffff12;text-align:left}
+td:first-child{width:34px;color:var(--muted)}
+td:last-child{text-align:right;font-family:Oswald,sans-serif;color:var(--accent);font-variant-numeric:tabular-nums}
+tr.me td{background:#c99a5b22}
+.status{font-size:13px;color:var(--muted);min-height:18px;margin-top:8px}
+#cause{color:var(--danger)}
+#cause.win{color:#a7c97a}
+.fact{text-align:left;font-size:12.5px;line-height:1.45;color:var(--text);background:#00000033;border-left:3px solid var(--accent);padding:8px 10px;margin:10px 0 0}
+.fact b{color:var(--accent);font-family:Oswald,sans-serif;letter-spacing:.06em;font-weight:500}
+.back{display:inline-block;margin:0 0 8px;color:var(--muted);font-size:13px;text-decoration:none}
+.back:hover{color:var(--accent)}
+.rotate{display:none;font-size:12.5px;color:var(--accent);margin:12px 0 0;text-align:center}
+@media (orientation:portrait) and (pointer:coarse){ .rotate{display:block} }
+#turn{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0f0c09f2;text-align:center;padding:0 24px}
+#turn .ico{font-size:54px;color:var(--accent)}
+#hudBtns{position:fixed;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:8px}
+.ibtn{width:34px;height:34px;border-radius:50%;border:1px solid #ffffff33;background:#0008;color:var(--text);font-size:14px;cursor:pointer}
+@media (orientation:landscape) and (max-height:560px){
+  .card.wide{max-width:780px;display:grid;grid-template-columns:1.1fr 1fr;gap:22px;text-align:left;padding:18px 20px;align-items:start}
+  .card.wide h1{font-size:30px}
+  .card.wide .brief{margin:10px 0 0}
+  .card.wide .tips{margin-top:0;font-size:12px}
+  .card.wide .tips li{margin:3px 0}
+  .card.wide input{text-align:left}
+  .card.wide .btn{padding:11px}
+  .card.wide .big{font-size:44px}
+  .card.wide .stats{justify-content:space-between}
+  .card.wide table{margin-top:0}
+  .card{padding:16px 18px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hudBtns" style="display:none"><button class="ibtn" id="pauseBtn" aria-label="Paus">❚❚</button><button class="ibtn" id="muteBtn" aria-label="Ljud">♪</button></div>
+<div id="turn" hidden><div class="ico">↻</div><h2>Vrid telefonen</h2><p>Verdun spelas i liggande läge.</p></div>
+
+<div class="screen" id="startScreen">
+  <div class="card wide">
+   <div class="col">
+    <a class="back" href="/">← Alla spel</a>
+    <h1><small>Slaget om</small>Verdun</h1>
+    <p class="brief">21 februari 1916. Tyskt trumeld över Verdun. Det finns bara en väg in – från Bar-le-Duc. Håll lastbilarna rullande, fördela granater och trupper mellan sektorerna och håll fronten till december.</p>
+    <input id="nameInput" maxlength="16" placeholder="Ditt namn" autocomplete="nickname">
+    <button class="btn" id="playBtn">Håll Verdun</button>
+    <button class="btn ghost" id="hsBtn">Topplista</button>
+    <p class="rotate">↻ Vrid telefonen till liggande läge – spelet är gjort för det.</p>
+   </div>
+   <div class="col">
+    <ul class="tips">
+      <li>Lastbilarna går från <b>Bar-le-Duc</b> längs <b>Voie Sacrée</b> till Verdun. <b>Tryck på en sektor</b> till höger för att skicka lasten dit.</li>
+      <li>Välj vad som lastas: <b>GRANATER</b> eller <b>TRUPPER</b>. Lasten tar några sekunder att komma fram – tänk framåt.</li>
+      <li>Tyskt artilleri slår sönder vägen. <b>Tryck på kratern</b> några gånger så skottar territorialsoldaterna igen den.</li>
+      <li>Varje sektor behöver både granater och manskap. Tar något slut blir det <b>genombrott</b>. Efter tre genombrott brister fronten.</li>
+      <li>Håll ut till den <b>18 december 1916</b>.</li>
+    </ul>
+   </div>
+  </div>
+</div>
+
+<div class="screen hidden" id="overScreen">
+  <div class="card wide">
+   <div class="col">
+    <h2 id="overTitle">Fronten har brustit</h2>
+    <p id="cause"></p>
+    <div class="big" id="finalScore">0</div>
+    <div class="stats">
+      <div><b id="stDays">0</b>dagar</div>
+      <div><b id="stRep">0</b>anfall stoppade</div>
+      <div><b id="stTrucks">0</b>lastbilar</div>
+    </div>
+    <p class="fact" id="fact" hidden></p>
+   </div>
+   <div class="col">
+    <div class="status" id="submitStatus"></div>
+    <table id="overTable"></table>
+    <button class="btn" id="againBtn">Försök igen</button>
+    <button class="btn ghost" id="menuBtn">Meny</button>
+   </div>
+  </div>
+</div>
+
+<div class="screen hidden" id="hsScreen">
+  <div class="card">
+    <h2>Topplista</h2>
+    <p>Verdun – de som hållit fronten längst.</p>
+    <div class="status" id="hsStatus"></div>
+    <table id="hsTable"></table>
+    <button class="btn ghost" id="hsBack">Tillbaka</button>
+  </div>
+</div>
+
+<div class="screen hidden" id="pauseScreen">
+  <div class="card">
+    <h2>Paus</h2>
+    <button class="btn" id="resumeBtn">Fortsätt</button>
+    <button class="btn ghost" id="quitBtn">Avsluta</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============ Grund ============ */
+const $ = id => document.getElementById(id);
+const cvs = $('c'), ctx = cvs.getContext('2d');
+const W = 900, H = 420, GAME = 'verdun', DAYS = 301;   // 21 februari – 18 december 1916
+const SEC_PER_DAY = 1.0;
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const lsGet = k => VF.lsGet(k), lsSet = (k, v) => VF.lsSet(k, v);
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli', 'augusti', 'september', 'oktober', 'november', 'december'];
+const MSHORT = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+function dateOf(day){ const d = new Date(1916, 1, 21 + Math.floor(day)); return { d: d.getDate(), m: d.getMonth() }; }
+const dateLong = day => { const x = dateOf(day); return x.d + ' ' + MONTHS[x.m] + ' 1916'; };
+const dateShort = day => { const x = dateOf(day); return x.d + ' ' + MSHORT[x.m]; };
+
+let dpr = 1, sc = 1, ox = 0, oy = 0;
+function resize(){
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = innerWidth, h = innerHeight;
+  cvs.width = Math.round(w * dpr); cvs.height = Math.round(h * dpr);
+  cvs.style.width = w + 'px'; cvs.style.height = h + 'px';
+  sc = Math.min(cvs.width / W, cvs.height / H); ox = (cvs.width - W * sc) / 2; oy = (cvs.height - H * sc) / 2;
+}
+const toWorld = (cx, cy) => ({ x: (cx * dpr - ox) / sc, y: (cy * dpr - oy) / sc });
+
+/* ============ Ljud ============ */
+let actx = null, muted = lsGet('vd_muted') === '1';
+function audio(){ if (!actx){ try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } if (actx && actx.state === 'suspended') actx.resume(); return actx; }
+const bufs = {};
+function noiseBuf(len){ const a = audio(); const k = len + ':' + a.sampleRate; if (bufs[k]) return bufs[k]; const b = a.createBuffer(1, a.sampleRate * len, a.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return bufs[k] = b; }
+function sfxBoom(vol){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime, s = a.createBufferSource(); s.buffer = noiseBuf(1.2);
+  const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(800, t); f.frequency.exponentialRampToValueAtTime(60, t + 1);
+  const g = a.createGain(); g.gain.setValueAtTime(.55 * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + 1.1); s.connect(f).connect(g).connect(a.destination); s.start(); }
+function sfxRumble(){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime, s = a.createBufferSource(); s.buffer = noiseBuf(.6);
+  const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 160; const g = a.createGain(); g.gain.setValueAtTime(.18, t); g.gain.exponentialRampToValueAtTime(.001, t + .6);
+  s.connect(f).connect(g).connect(a.destination); s.start(); }
+function beep(freq, len, vol, type){ if (muted) return; const a = audio(); if (!a) return; const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol || .06, a.currentTime); g.gain.exponentialRampToValueAtTime(.001, a.currentTime + len); o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + len + .02); }
+function sfxShovel(){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime, s = a.createBufferSource(); s.buffer = noiseBuf(.12);
+  const f = a.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1200; const g = a.createGain(); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .12);
+  s.connect(f).connect(g).connect(a.destination); s.start(); }
+function sfxWhistle(){ if (muted) return; const a = audio(); if (!a) return; const o = a.createOscillator(), g = a.createGain(), t = a.currentTime; o.type = 'sine';
+  o.frequency.setValueAtTime(1200, t); o.frequency.exponentialRampToValueAtTime(400, t + 1.4);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.045, t + .3); g.gain.exponentialRampToValueAtTime(.0001, t + 1.45); o.connect(g).connect(a.destination); o.start(); o.stop(t + 1.5); }
+
+/* ============ Kartan ============ */
+const DEPOT = { x: 18, y: 150, w: 104, h: 120 };
+const HUB = { x: 636, y: 212 };
+// Voie Sacrée: slingrande väg från Bar-le-Duc till Verdun
+const ROAD = [];
+for (let x = 122; x <= 630; x += 4){ const k = (x - 122) / 508; ROAD.push({ x, y: 214 + Math.sin(k * Math.PI * 3.2) * 34 * Math.sin(k * Math.PI) - k * 2 }); }
+const RLEN = []; { let s = 0; ROAD.forEach((p, i) => { if (i) s += dist(p.x, p.y, ROAD[i - 1].x, ROAD[i - 1].y); RLEN.push(s); }); }
+const L = RLEN[RLEN.length - 1];
+function posAt(s){
+  s = clamp(s, 0, L); let i = 1; while (i < RLEN.length - 1 && RLEN[i] < s) i++;
+  const a = ROAD[i - 1], b = ROAD[i], k = (s - RLEN[i - 1]) / ((RLEN[i] - RLEN[i - 1]) || 1);
+  return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, ang: Math.atan2(b.y - a.y, b.x - a.x) };
+}
+const CX = 678, CW = 214, CH = 92;
+const SECTORS = [
+  { id: 'mh', n: 'Mort-Homme', sub: 'västra stranden' },
+  { id: 'do', n: 'Douaumont', sub: 'fortet' },
+  { id: 'fl', n: 'Fleury', sub: 'byn' },
+  { id: 'va', n: 'Vaux', sub: 'fortet' }
+];
+const cardY = i => 14 + i * (CH + 9);
+const CARGO_BTN = { amm: { x: 14, y: 344, w: 122, h: 62 }, tr: { x: 144, y: 344, w: 122, h: 62 } };
+
+/* ============ Historien ============ */
+const EVENTS = [
+  { day: 0,   txt: 'Tyskt trumeld inleder slaget – omkring 1 200 kanoner öppnar eld mot Verdun.' },
+  { day: 4,   txt: 'Fort Douaumont faller nästan utan strid. Det var bara bemannat av ett sextiotal man.', fx: g => { g.sec[1].pen = 1.3; } },
+  { day: 5,   txt: 'General Pétain tar befälet. Voie Sacrée organiseras – snart rullar en lastbil var fjortonde sekund.', fx: g => { g.truckInt = 1.35; } },
+  { day: 14,  txt: 'Tyskarna anfaller även på västra stranden av Meuse: Mort-Homme och Höjd 304.', fx: g => { g.sec[0].quiet = false; } },
+  { day: 70,  txt: 'Nivelle tar över försvaret: "Ils ne passeront pas!" – De ska inte komma igenom.' },
+  { day: 107, txt: 'Fort Vaux kapitulerar efter en veckas strid i gångarna. Försvararna hade slut på vatten.', fx: g => { g.sec[3].pen = 1.3; } },
+  { day: 123, txt: 'Gasanfall mot Fleury. Byn kommer att byta ägare sexton gånger under sommaren.', fx: g => { startAttack(g.sec[2], 0, 16, 1.4); } },
+  { day: 131, txt: 'Sommeoffensiven börjar. Tyskarna måste flytta trupper – trycket mot Verdun minskar.', fx: g => { g.phase = 'somme'; } },
+  { day: 141, txt: 'Det sista stora tyska anfallet mot Fort Souville stoppas.' },
+  { day: 245, txt: 'Franskt motanfall mot Fort Douaumont!', fx: g => counter(g.sec[1], 'Fort Douaumont') },
+  { day: 254, txt: 'Franskt motanfall mot Fort Vaux!', fx: g => counter(g.sec[3], 'Fort Vaux') },
+  { day: 293, txt: 'Den sista franska offensiven tar tillbaka stora delar av marken från februari.' }
+];
+const FACTS = [
+  'Slaget om Verdun pågick från den 21 februari till den 18 december 1916 – nästan tio månader. Omkring 300 000 soldater stupade.',
+  'Voie Sacrée – den heliga vägen – var den enda vägen in till Verdun. Under de värsta veckorna körde en lastbil var fjortonde sekund, dygnet runt.',
+  'Territorialsoldater stod längs Voie Sacrée och skottade sten i hjulspåren medan lastbilarna rullade förbi, så att vägen aldrig behövde stängas.',
+  'Pétain lät förbanden rotera in och ut ur linjen – en "noria", som ett skovelhjul. Därför tjänstgjorde de flesta av den franska arméns förband vid Verdun under 1916.',
+  'Fort Vaux kapitulerade den 7 juni 1916. Kommendanten Raynal skickade sitt sista meddelande med brevduvan Vaillant.',
+  'Byn Fleury bytte ägare sexton gånger under sommaren 1916. Den byggdes aldrig upp igen och räknas i dag som en by som "dog för Frankrike".',
+  'Den tyska planen var att tvinga Frankrike att förblöda genom ett slag där Frankrike av prestigeskäl inte kunde ge upp.',
+  'Ossuariet i Douaumont rymmer kvarlevor efter omkring 130 000 okända soldater från båda sidor.'
+];
+
+/* ============ Spelstatus ============ */
+let G = null, state = 'menu', lastT = 0;
+function newGame(){
+  G = { day: 0, t: 0, score: 0, lives: 3, repelled: 0, delivered: 0, lost: 0,
+    cargo: 'amm', sel: 1, truckInt: 2.4, truckT: .3, attT: 6, shellT: 5, phase: 'off', ev: 0, banner: null,
+    trucks: [], craters: [], shells: [], parts: [], toasts: [], flashes: [], shake: 0,
+    tut: 0, deco: makeDeco(),
+    sec: SECTORS.map((s, i) => ({ ...s, i, amm: 72 + rand(0, 8), tr: 70 + rand(0, 8), pen: 1, quiet: i === 0, att: null, warn: 0, grace: 0, hitT: 0 })) };
+}
+function makeDeco(){
+  const d = { holes: [], stumps: [], smoke: [] };
+  for (let i = 0; i < 120; i++){ const x = rand(0, 670), y = rand(0, H); d.holes.push({ x, y, r: rand(4, 13) * (0.6 + x / 900), a: rand(.15, .4) }); }
+  for (let i = 0; i < 26; i++) d.stumps.push({ x: rand(430, 660), y: rand(10, H - 10), h: rand(5, 12), a: rand(-.5, .5) });
+  for (let i = 0; i < 14; i++) d.smoke.push({ x: rand(560, 900), y: rand(0, H), r: rand(30, 70), v: rand(4, 10), a: rand(.05, .12) });
+  return d;
+}
+function toast(txt, col, t){ G.toasts.push({ txt, col: col || '#ebe2cf', t: t || 2.2 }); if (G.toasts.length > 3) G.toasts.shift(); }
+function burst(x, y, n, cols, sp){ for (let i = 0; i < n; i++){ const a = rand(0, 6.28), v = rand(sp * .3, sp);
+  G.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: rand(.4, 1), max: 1, c: cols[i % cols.length], s: rand(1.5, 3.5) }); } }
+function startAttack(s, warn, dur, power){ if (s.att) return; s.att = { warn: warn, dur: dur, max: dur, power: power || 1 }; }
+function counter(s, name){
+  const strong = s.amm + s.tr >= 100;
+  if (strong){ s.pen = 1; G.score += 500; s.amm = Math.max(10, s.amm - 25); s.tr = Math.max(10, s.tr - 25); toast(name + ' återtaget! +500', '#a7c97a', 3.4); beep(660, .3, .08, 'triangle'); }
+  else toast('Motanfallet misslyckades – sektorn var för svag', '#e06a4a', 3.4);
+}
+
+/* ============ Uppdatering ============ */
+function update(dt){
+  G.t += dt; G.day = Math.min(DAYS - 1, G.t / SEC_PER_DAY);
+  // historiska händelser
+  while (G.ev < EVENTS.length && G.day >= EVENTS[G.ev].day){ const e = EVENTS[G.ev++]; G.banner = { txt: e.txt, date: dateLong(e.day), t: 6.5 }; if (e.fx) e.fx(G); }
+  if (G.banner){ G.banner.t -= dt; if (G.banner.t <= 0) G.banner = null; }
+  if (G.t >= DAYS * SEC_PER_DAY) return victory();
+  // introduktion
+  if (G.tut === 0 && G.t > 7){ G.tut = 1; toast('Tryck på en sektor för att skicka lasten dit', '#e9cf8a', 3.4); }
+  if (G.tut === 1 && G.t > 13){ G.tut = 2; toast('Välj GRANATER eller TRUPPER nere till vänster', '#e9cf8a', 3.4); }
+  const peak = G.phase === 'somme' ? .65 : Math.min(1, .55 + G.day / 120);
+  // lastbilar från depån
+  G.truckT -= dt;
+  if (G.truckT <= 0){ G.truckT = G.truckInt;
+    const first = G.trucks.filter(t => !t.ret).reduce((m, t) => Math.min(m, t.s), 1e9);
+    if (first > 18) G.trucks.push({ s: 0, cargo: G.cargo, ret: false, v: rand(66, 74) }); }
+  const fwd = G.trucks.filter(t => !t.ret).sort((a, b) => b.s - a.s);
+  for (let i = 0; i < fwd.length; i++){
+    const t = fwd[i]; let lim = i ? fwd[i - 1].s - 15 : 1e9;
+    for (const c of G.craters) if (c.hp > 0 && c.s > t.s - 2) lim = Math.min(lim, c.s - 11);
+    const want = t.s + t.v * dt; t.stuck = want > lim + .01; t.s = Math.max(t.s, Math.min(want, lim));
+    if (t.s >= L){ deliver(t); }
+  }
+  for (const t of G.trucks) if (t.ret){ t.s -= 95 * dt; if (t.s <= 0) t.gone = true; }
+  G.trucks = G.trucks.filter(t => !t.gone);
+  // tyskt artilleri mot vägen
+  G.shellT -= dt;
+  if (G.shellT <= 0 && G.day > 1){
+    G.shellT = (G.phase === 'somme' ? 7.5 : Math.max(3.6, 6.5 - G.day / 40)) * rand(.75, 1.25);
+    const s = rand(40, L - 25); G.shells.push({ s, t: 1.5 }); sfxWhistle();
+  }
+  for (const sh of G.shells){ sh.t -= dt; if (sh.t <= 0 && !sh.done){ sh.done = true; const p = posAt(sh.s);
+    sfxBoom(.8); G.shake = Math.max(G.shake, 6); burst(p.x, p.y, 26, ['#e8a24a', '#5a4630', '#3a2d20', '#8a7a62'], 150);
+    const ex = G.craters.find(c => Math.abs(c.s - sh.s) < 16);
+    if (ex) ex.hp = ex.max = Math.min(6, ex.hp + 2); else G.craters.push({ s: sh.s, hp: 4, max: 4, shake: 0 });
+    let hit = 0; for (const t of G.trucks) if (Math.abs(t.s - sh.s) < 13){ t.gone = true; hit++; }
+    if (hit){ G.lost += hit; toast(hit > 1 ? hit + ' lastbilar träffade' : 'Lastbil träffad', '#e06a4a', 1.8); }
+    if (G.tut < 3){ G.tut = 3; toast('Tryck på kratern för att laga vägen!', '#e9cf8a', 3.6); } } }
+  G.shells = G.shells.filter(s => !s.done); G.trucks = G.trucks.filter(t => !t.gone);
+  for (const c of G.craters){ c.hp -= .1 * dt; c.shake = Math.max(0, c.shake - dt); }
+  G.craters = G.craters.filter(c => c.hp > 0);
+  // tyska anfall mot sektorerna
+  G.attT -= dt;
+  if (G.attT <= 0 && G.day > .5){
+    G.attT = (G.phase === 'somme' ? 12 : Math.max(6.5, 10.5 - G.day / 40)) * rand(.8, 1.2);
+    const cand = G.sec.filter(s => !s.att && !s.quiet);
+    if (cand.length){ const w = cand.map(s => s.pen); let r = Math.random() * w.reduce((a, b) => a + b, 0), s = cand[0];
+      for (let i = 0; i < cand.length; i++){ r -= w[i]; if (r <= 0){ s = cand[i]; break; } }
+      startAttack(s, 5, rand(10, 14), 1); }
+    if (G.day > 60 && G.phase !== 'somme' && Math.random() < .2){ const c2 = G.sec.filter(s => !s.att && !s.quiet); if (c2.length) startAttack(pick(c2), 6, rand(9, 12), 1); }
+  }
+  // sektorerna förbrukar
+  for (const s of G.sec){
+    const base = s.quiet ? .5 : 1;
+    let da = .42 * base, dtr = .32 * base;
+    s.grace = Math.max(0, s.grace - dt); s.hitT = Math.max(0, s.hitT - dt);
+    if (s.att){
+      if (s.att.warn > 0){ s.att.warn -= dt; if (s.att.warn <= 0){ sfxRumble(); } }
+      else { s.att.dur -= dt; const k = s.att.power * s.pen * peak; da += 2.1 * k; dtr += 1.6 * k;
+        if (Math.random() < 3 * dt) G.flashes.push({ x: CX + rand(20, CW - 20), y: cardY(s.i) + rand(10, CH - 10), t: .25 });
+        if (s.att.dur <= 0){ s.att = null; G.repelled++; G.score += 50; toast('Anfallet vid ' + s.n + ' slogs tillbaka +50', '#a7c97a', 2); } }
+    }
+    if (s.grace <= 0){ s.amm -= da * dt; s.tr -= dtr * dt; }
+    if (s.amm <= 0 || s.tr <= 0) breakthrough(s, s.amm <= 0 ? 'amm' : 'tr');
+  }
+  // poäng för varje dag fronten håller
+  G.score += 10 * dt / SEC_PER_DAY;
+  updFx(dt);
+}
+function deliver(t){
+  const s = G.sec[G.sel];
+  if (t.cargo === 'amm') s.amm = Math.min(100, s.amm + 9); else s.tr = Math.min(100, s.tr + 9);
+  G.delivered++; G.score += 2; t.ret = true; t.s = L;
+  G.flashes.push({ x: CX + 6, y: cardY(s.i) + CH / 2, t: .3, ok: true, cargo: t.cargo });
+}
+function breakthrough(s, why){
+  if (state !== 'play') return;
+  G.lives--; G.shake = 14; sfxBoom(1.2); if (navigator.vibrate) navigator.vibrate(120);
+  G.lastBreak = { n: s.n, why };
+  if (G.lives <= 0) return gameOver();
+  toast('Genombrott vid ' + s.n + '! Reserverna sätts in', '#e06a4a', 3);
+  s.amm = Math.max(s.amm, 50); s.tr = Math.max(s.tr, 50); s.att = null; s.grace = 3; s.hitT = 1;
+}
+function updFx(dt){
+  for (const pt of G.parts){ pt.t -= dt; pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vx *= .92; pt.vy *= .92; }
+  G.parts = G.parts.filter(pt => pt.t > 0);
+  for (const f of G.flashes) f.t -= dt; G.flashes = G.flashes.filter(f => f.t > 0);
+  for (const t of G.toasts) t.t -= dt; G.toasts = G.toasts.filter(t => t.t > 0);
+  for (const s of G.deco.smoke){ s.x -= s.v * dt; if (s.x < 520) s.x = 940; }
+  G.shake = Math.max(0, G.shake - 30 * dt);
+}
+
+/* ============ Inmatning ============ */
+function tap(p){
+  if (state !== 'play') return;
+  audio();
+  for (const k of ['amm', 'tr']){ const b = CARGO_BTN[k]; if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h){ if (G.cargo !== k){ G.cargo = k; beep(k === 'amm' ? 420 : 560, .08, .06, 'triangle'); } return; } }
+  // kratrar (generös träffyta)
+  let best = null, bd = 34;
+  for (const c of G.craters){ const q = posAt(c.s), d = dist(p.x, p.y, q.x, q.y); if (d < bd){ bd = d; best = c; } }
+  if (best){ best.hp -= 1; best.shake = .15; sfxShovel(); const q = posAt(best.s); burst(q.x, q.y, 6, ['#8a7a62', '#b8a888'], 50);
+    if (best.hp <= 0){ G.score += 5; toast('Vägen lagad +5', '#c9d2a0', 1.2); } return; }
+  for (const s of G.sec){ const y = cardY(s.i); if (p.x >= CX - 8 && p.x <= CX + CW + 8 && p.y >= y - 4 && p.y <= y + CH + 4){ if (G.sel !== s.i){ G.sel = s.i; beep(700, .06, .05); } if (G.tut < 2) G.tut = 2; return; } }
+}
+cvs.addEventListener('touchstart', e => { e.preventDefault(); for (const t of e.changedTouches) tap(toWorld(t.clientX, t.clientY)); }, { passive: false });
+cvs.addEventListener('mousedown', e => tap(toWorld(e.clientX, e.clientY)));
+addEventListener('keydown', e => {
+  if (e.code === 'Escape' || e.code === 'KeyP') return togglePause();
+  if (state !== 'play') return;
+  if (e.code === 'KeyG') G.cargo = 'amm'; if (e.code === 'KeyT') G.cargo = 'tr';
+  const n = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3 }[e.code]; if (n !== undefined) G.sel = n;
+});
+
+/* ============ Ritning ============ */
+function rr(x, y, w, h, r){ ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function drawTruck(x, y, ang, cargo, ret){
+  ctx.save(); ctx.translate(x, y); ctx.rotate(ang + (ret ? Math.PI : 0));
+  ctx.fillStyle = '#0006'; ctx.fillRect(-7, -3, 15, 8);
+  ctx.fillStyle = ret ? '#5b5f52' : cargo === 'amm' ? '#6d5a3c' : '#5f7486';    // flak
+  ctx.fillRect(-8, -4, 11, 8);
+  ctx.fillStyle = '#3d4036'; ctx.fillRect(3, -3.5, 5, 7);                          // hytt
+  if (!ret){ ctx.fillStyle = cargo === 'amm' ? '#d39a4a' : '#bcd0e0'; ctx.fillRect(-6, -1.2, 7, 2.4); }
+  ctx.restore();
+}
+function bar(x, y, w, h, v, col, label, warn){
+  ctx.fillStyle = '#0009'; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = v < 25 ? (warn ? '#e06a4a' : '#c4553a') : col; ctx.fillRect(x + 1, y + 1, (w - 2) * clamp(v / 100, 0, 1), h - 2);
+  ctx.fillStyle = '#ebe2cf'; ctx.font = '9px "Special Elite", monospace'; ctx.textAlign = 'left'; ctx.fillText(label, x, y - 3);
+}
+function wrap(txt, maxW){ const words = txt.split(' '), lines = []; let line = '';
+  for (const w of words){ const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line); return lines; }
+function render(){
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#120e0a'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+  if (!G) return;
+  const sx = (Math.random() - .5) * G.shake, sy = (Math.random() - .5) * G.shake;
+  ctx.setTransform(sc, 0, 0, sc, ox + sx * sc, oy + sy * sc);
+  // lera, kratrar och stubbar
+  const gr = ctx.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, '#4b4430'); gr.addColorStop(.45, '#463a29'); gr.addColorStop(.75, '#3a2d20'); gr.addColorStop(1, '#2c2219');
+  ctx.fillStyle = gr; ctx.fillRect(-400, -400, W + 800, H + 800);
+  for (const h of G.deco.holes){ ctx.fillStyle = `rgba(22,16,10,${h.a})`; ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, 7); ctx.fill(); ctx.strokeStyle = `rgba(120,98,70,${h.a * .8})`; ctx.lineWidth = 1.5; ctx.stroke(); }
+  ctx.strokeStyle = '#1f1710'; ctx.lineWidth = 2;
+  for (const s of G.deco.stumps){ ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x + Math.sin(s.a) * s.h, s.y - Math.cos(s.a) * s.h); ctx.stroke(); }
+  // Meuse
+  ctx.strokeStyle = '#3c4c55'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(585, -20);
+  for (let y = 0; y <= H + 20; y += 20) ctx.lineTo(590 + Math.sin(y / 60) * 14, y); ctx.stroke();
+  ctx.fillStyle = 'rgba(235,226,207,.35)'; ctx.font = 'italic 9px "Special Elite", monospace'; ctx.textAlign = 'center'; ctx.save(); ctx.translate(604, 380); ctx.rotate(-1.4); ctx.fillText('MEUSE', 0, 0); ctx.restore();
+  // vägen
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#2a2117'; ctx.lineWidth = 20; ctx.beginPath(); ROAD.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
+  ctx.strokeStyle = '#8c7d63'; ctx.lineWidth = 14; ctx.stroke();
+  ctx.strokeStyle = 'rgba(60,48,34,.5)'; ctx.lineWidth = 1; ctx.setLineDash([3, 9]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(235,226,207,.55)'; ctx.font = 'italic 10px "Special Elite", monospace'; ctx.fillText('V O I E   S A C R É E', 380, 288);
+  // ledningar från Verdun till sektorerna
+  for (const s of G.sec){ const y = cardY(s.i) + CH / 2, on = s.i === G.sel;
+    ctx.strokeStyle = on ? 'rgba(201,154,91,.9)' : 'rgba(140,125,99,.35)'; ctx.lineWidth = on ? 4 : 2; ctx.setLineDash(on ? [] : [4, 5]);
+    ctx.beginPath(); ctx.moveTo(HUB.x, HUB.y); ctx.quadraticCurveTo(CX - 20, y, CX - 6, y); ctx.stroke(); ctx.setLineDash([]); }
+  // Verdun
+  ctx.fillStyle = '#5a5146'; for (const [dx, dy, w, h] of [[-14, -16, 10, 12], [-2, -20, 9, 16], [8, -14, 12, 10], [-10, 2, 14, 10], [6, 0, 10, 12]]) ctx.fillRect(HUB.x + dx, HUB.y + dy, w, h);
+  ctx.fillStyle = '#3d362e'; ctx.fillRect(HUB.x - 1, HUB.y - 30, 3, 12); ctx.fillRect(HUB.x + 4, HUB.y - 30, 3, 12);
+  ctx.fillStyle = '#ebe2cf'; ctx.font = '700 11px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('VERDUN', HUB.x, HUB.y + 26);
+  // depån i Bar-le-Duc
+  const D = DEPOT; ctx.fillStyle = '#2b2419e6'; rr(D.x, D.y, D.w, D.h, 5); ctx.fill(); ctx.strokeStyle = '#6c5b46'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#ebe2cf'; ctx.font = '700 12px Oswald, sans-serif'; ctx.fillText('BAR-LE-DUC', D.x + D.w / 2, D.y + 18);
+  ctx.fillStyle = '#a99c86'; ctx.font = '9px "Special Elite", monospace'; ctx.fillText('depå & järnväg', D.x + D.w / 2, D.y + 30);
+  ctx.fillStyle = '#5a4e40'; for (let i = 0; i < 3; i++) ctx.fillRect(D.x + 12 + i * 28, D.y + 42, 22, 16);
+  ctx.strokeStyle = '#6c5b46'; ctx.lineWidth = 1; for (let x = D.x + 8; x < D.x + D.w - 6; x += 6){ ctx.beginPath(); ctx.moveTo(x, D.y + 66); ctx.lineTo(x, D.y + 72); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(D.x + 6, D.y + 67); ctx.lineTo(D.x + D.w - 6, D.y + 67); ctx.moveTo(D.x + 6, D.y + 71); ctx.lineTo(D.x + D.w - 6, D.y + 71); ctx.stroke();
+  ctx.fillStyle = '#a99c86'; ctx.font = '9px "Special Elite", monospace'; ctx.fillText('nästa last:', D.x + D.w / 2, D.y + 90);
+  ctx.fillStyle = G.cargo === 'amm' ? '#d39a4a' : '#bcd0e0'; ctx.font = '700 13px Oswald, sans-serif'; ctx.fillText(G.cargo === 'amm' ? 'GRANATER' : 'TRUPPER', D.x + D.w / 2, D.y + 107);
+  // granatvarningar på vägen
+  for (const sh of G.shells){ const p = posAt(sh.s), k = 1 - sh.t / 1.5;
+    ctx.strokeStyle = `rgba(224,90,60,${.4 + .5 * k})`; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(p.x, p.y, 16, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = `rgba(224,90,60,${.15 + .25 * k})`; ctx.beginPath(); ctx.arc(p.x, p.y, 16 * k, 0, 7); ctx.fill(); }
+  // kratrar
+  for (const c of G.craters){ const p = posAt(c.s), jx = c.shake > 0 ? rand(-1.5, 1.5) : 0, k = clamp(c.hp / c.max, 0, 1);
+    ctx.fillStyle = '#1a130c'; ctx.beginPath(); ctx.arc(p.x + jx, p.y, 6 + 6 * k, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#5d4a33'; ctx.lineWidth = 2.5; ctx.stroke();
+    const pulse = .55 + .45 * Math.sin(G.t * 7 + c.s);
+    ctx.strokeStyle = `rgba(233,207,138,${pulse})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, 20, 0, 7); ctx.stroke();
+    ctx.fillStyle = '#e9cf8a'; ctx.font = '700 9px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('LAGA', p.x, p.y - 24);
+    for (let i = 0; i < Math.ceil(c.hp); i++){ ctx.fillStyle = '#e9cf8a'; ctx.fillRect(p.x - 10 + i * 5, p.y + 24, 3.5, 3.5); } }
+  // lastbilar
+  for (const t of G.trucks){ const p = posAt(t.s), nx = -Math.sin(p.ang), ny = Math.cos(p.ang), off = t.ret ? 4 : -4; drawTruck(p.x + nx * off, p.y + ny * off, p.ang, t.cargo, t.ret); }
+  // rök över fronten
+  for (const s of G.deco.smoke){ ctx.fillStyle = `rgba(170,160,145,${s.a})`; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill(); }
+  // sektorkorten
+  for (const s of G.sec){
+    const y = cardY(s.i), on = s.i === G.sel, a = s.att, attacking = a && a.warn <= 0, warning = a && a.warn > 0;
+    ctx.fillStyle = s.hitT > 0 ? '#5a1f16ee' : '#221c15ee'; rr(CX, y, CW, CH, 5); ctx.fill();
+    ctx.lineWidth = on ? 3 : 1.5;
+    ctx.strokeStyle = attacking ? `rgba(224,90,60,${.6 + .4 * Math.sin(G.t * 10)})` : on ? '#c99a5b' : '#56483a'; ctx.stroke();
+    ctx.textAlign = 'left'; ctx.fillStyle = '#ebe2cf'; ctx.font = '700 15px Oswald, sans-serif'; ctx.fillText(s.n.toUpperCase(), CX + 10, y + 20);
+    ctx.fillStyle = '#a99c86'; ctx.font = '9px "Special Elite", monospace';
+    ctx.fillText(s.pen > 1 ? (s.id === 'do' ? 'fortet förlorat' : 'fortet förlorat') : s.quiet ? 'lugnt än så länge' : s.sub, CX + 10, y + 32);
+    if (on){ ctx.textAlign = 'right'; ctx.fillStyle = '#c99a5b'; ctx.font = '700 10px Oswald, sans-serif'; ctx.fillText('▶ LASTEN HIT', CX + CW - 10, y + 18); }
+    else if (G.t < 20){ ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(169,156,134,.7)'; ctx.font = '9px "Special Elite", monospace'; ctx.fillText('tryck här', CX + CW - 10, y + 18); }
+    bar(CX + 10, y + 50, CW - 20, 9, s.amm, '#c98a3e', 'GRANATER', attacking);
+    bar(CX + 10, y + 74, CW - 20, 9, s.tr, '#7f97ad', 'MANSKAP', attacking);
+    ctx.textAlign = 'right'; ctx.font = '700 10px Oswald, sans-serif';
+    if (attacking){ ctx.fillStyle = `rgba(224,106,74,${.6 + .4 * Math.sin(G.t * 10)})`; ctx.fillText('ANFALL!', CX + CW - 10, y + 32); }
+    else if (warning){ ctx.fillStyle = '#e9cf8a'; ctx.fillText('anfall om ' + Math.ceil(a.warn) + ' s', CX + CW - 10, y + 32); }
+    if (attacking){ ctx.fillStyle = 'rgba(224,90,60,.85)'; for (let k = 0; k < 3; k++){ const ay = y + 22 + k * 24, ax = CX + CW + 2 + ((G.t * 30 + k * 7) % 10);
+      ctx.beginPath(); ctx.moveTo(ax + 10, ay - 5); ctx.lineTo(ax, ay); ctx.lineTo(ax + 10, ay + 5); ctx.fill(); } }
+  }
+  for (const f of G.flashes){ ctx.globalAlpha = clamp(f.t / .3, 0, 1);
+    if (f.ok){ ctx.fillStyle = f.cargo === 'amm' ? '#d39a4a' : '#bcd0e0'; ctx.beginPath(); ctx.arc(f.x, f.y, 6, 0, 7); ctx.fill(); }
+    else { ctx.fillStyle = '#ffd890'; ctx.beginPath(); ctx.arc(f.x, f.y, 5, 0, 7); ctx.fill(); } }
+  ctx.globalAlpha = 1;
+  for (const pt of G.parts){ ctx.globalAlpha = clamp(pt.t / pt.max, 0, 1); ctx.fillStyle = pt.c; ctx.fillRect(pt.x - pt.s / 2, pt.y - pt.s / 2, pt.s, pt.s); }
+  ctx.globalAlpha = 1;
+  if (state === 'play' || state === 'paused') drawHud();
+}
+function drawHud(){
+  // datum, poäng, linjen
+  ctx.textAlign = 'left'; ctx.fillStyle = '#a99c86'; ctx.font = '500 10px Oswald, sans-serif'; ctx.fillText('DAG ' + (Math.floor(G.day) + 1) + ' AV ' + DAYS, 16, 20);
+  ctx.fillStyle = '#ebe2cf'; ctx.font = '700 22px Oswald, sans-serif'; ctx.fillText(dateLong(G.day), 16, 44);
+  ctx.fillStyle = '#c99a5b'; ctx.font = '700 18px Oswald, sans-serif'; ctx.fillText(Math.floor(G.score), 16, 68);
+  ctx.fillStyle = '#a99c86'; ctx.font = '9px "Special Elite", monospace'; ctx.fillText('LINJEN HÅLLER', 16, 88);
+  for (let i = 0; i < 3; i++){ ctx.fillStyle = i < G.lives ? '#7f97ad' : '#0008'; rr(16 + i * 22, 93, 18, 12, 2); ctx.fill(); ctx.strokeStyle = '#7f97ad88'; ctx.lineWidth = 1; ctx.stroke(); }
+  const onRoad = G.trucks.filter(t => !t.ret).length, stuck = G.trucks.filter(t => !t.ret && t.stuck).length;
+  ctx.fillStyle = '#a99c86'; ctx.font = '9px "Special Elite", monospace'; ctx.fillText('lastbilar på väg: ' + onRoad + (stuck ? ' · ' + stuck + ' står still' : ''), 16, 122);
+  // lastknappar
+  for (const k of ['amm', 'tr']){ const b = CARGO_BTN[k], on = G.cargo === k;
+    ctx.fillStyle = on ? (k === 'amm' ? '#c98a3e' : '#7f97ad') : '#221c15dd'; rr(b.x, b.y, b.w, b.h, 6); ctx.fill();
+    ctx.strokeStyle = k === 'amm' ? '#c98a3e' : '#7f97ad'; ctx.lineWidth = on ? 3 : 1.5; ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillStyle = on ? '#1d150c' : '#ebe2cf'; ctx.font = '700 15px Oswald, sans-serif'; ctx.fillText(k === 'amm' ? 'GRANATER' : 'TRUPPER', b.x + b.w / 2, b.y + 28);
+    ctx.font = '9px "Special Elite", monospace'; ctx.fillText(on ? 'lastas nu' : 'tryck för att välja', b.x + b.w / 2, b.y + 45); }
+  ctx.fillStyle = '#a99c86'; ctx.font = '9px "Special Elite", monospace'; ctx.textAlign = 'left'; ctx.fillText('LAST FRÅN DEPÅN', 14, 338);
+  // nyhetsrad från fronten
+  if (G.banner){ const b = G.banner, a = clamp(b.t / .6, 0, 1) * clamp((6.5 - b.t) / .3, 0, 1);
+    ctx.globalAlpha = a; ctx.font = '12px "Special Elite", monospace'; const lines = wrap(b.txt, 380), bh = 26 + lines.length * 15;
+    ctx.fillStyle = '#efe6d0f2'; rr(150, 52, 410, bh, 4); ctx.fill(); ctx.strokeStyle = '#6c5b46'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#7a2a1e'; ctx.font = '700 11px Oswald, sans-serif'; ctx.textAlign = 'left'; ctx.fillText(b.date.toUpperCase(), 164, 70);
+    ctx.fillStyle = '#2a2117'; ctx.font = '12px "Special Elite", monospace'; lines.forEach((l, i) => ctx.fillText(l, 164, 86 + i * 15));
+    ctx.globalAlpha = 1; }
+  // meddelanden
+  let ty = 300;
+  for (const t of G.toasts){ ctx.globalAlpha = clamp(t.t / .5, 0, 1); ctx.textAlign = 'center'; ctx.font = '700 15px Oswald, sans-serif';
+    ctx.fillStyle = '#000b'; ctx.fillText(t.txt, 400 + 1, ty + 1); ctx.fillStyle = t.col; ctx.fillText(t.txt, 400, ty); ty += 21; }
+  ctx.globalAlpha = 1;
+}
+
+/* ============ Loop ============ */
+const portrait = () => innerHeight > innerWidth * 1.05;
+function loop(t){
+  const dt = Math.min(.05, (t - lastT) / 1000 || 0); lastT = t;
+  const turn = state === 'play' && portrait(); $('turn').hidden = !turn;
+  if (state === 'play' && !turn) update(dt); else if (G && state !== 'paused') updFx(dt);
+  render(); requestAnimationFrame(loop);
+}
+
+/* ============ Skärmar & topplista ============ */
+const screens = ['startScreen', 'overScreen', 'hsScreen', 'pauseScreen'];
+function show(id){ for (const s of screens) $(s).classList.toggle('hidden', s !== id); $('hudBtns').style.display = id ? 'none' : 'flex'; }
+let lastTs = null;
+function renderTable(el, list, meTs){
+  if (!list || !list.length){ el.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#a99c86">Ingen har kommit med på listan ännu. Bli först!</td></tr>'; return; }
+  el.innerHTML = list.map((s, i) => `<tr class="${s.ts === meTs ? 'me' : ''}"><td>${i + 1}.</td><td>${esc(s.name)}</td><td>${s.score}</td></tr>`).join('');
+}
+async function loadHs(){
+  $('hsStatus').textContent = 'Hämtar…'; $('hsTable').innerHTML = '';
+  try { const j = await VF.load(GAME); $('hsStatus').textContent = VF.pending() ? 'Dina sparade resultat skickas när du har täckning.' : ''; renderTable($('hsTable'), j.scores, lastTs); }
+  catch(e){ $('hsStatus').textContent = 'Ingen täckning just nu – topplistan visas när du är uppkopplad.'; }
+}
+async function submit(){
+  const name = ($('nameInput').value || '').trim().slice(0, 16) || 'Okänd soldat';
+  const st = $('submitStatus'); st.textContent = 'Rapporterar till högkvarteret…'; $('overTable').innerHTML = '';
+  const j = await VF.submit(GAME, { name, score: Math.floor(G.score), days: Math.floor(G.day) + 1, repelled: G.repelled, trucks: G.delivered, duration: Math.round(G.t) });
+  if (j.ok){ lastTs = j.ts; st.textContent = j.rank ? `Du är på plats ${j.rank}!` : 'Poängen är sparad.'; renderTable($('overTable'), j.scores.slice(0, 10), j.ts); }
+  else if (j.queued) st.textContent = 'Ingen täckning – poängen skickas automatiskt när du är uppkopplad igen.';
+  else st.textContent = 'Kunde inte spara till topplistan (' + j.error + ').';
+}
+function finish(win){
+  if (state === 'over') return;
+  state = 'over'; G.shake = 0;
+  VF.setBest(GAME, Math.floor(G.score));
+  $('overTitle').textContent = win ? 'Verdun höll' : 'Fronten har brustit';
+  const c = $('cause'); c.classList.toggle('win', !!win);
+  if (win) c.textContent = 'Slaget om Verdun är över den 18 december 1916. Fronten höll i ' + DAYS + ' dagar.';
+  else { const b = G.lastBreak || { n: 'fronten', why: 'amm' };
+    c.textContent = 'Den ' + dateLong(G.day) + ' bröt tyskarna igenom vid ' + b.n + ' – ' + (b.why === 'amm' ? 'artilleriet hade slut på granater.' : 'manskapet var utmattat.'); }
+  $('finalScore').textContent = Math.floor(G.score);
+  $('stDays').textContent = Math.floor(G.day) + 1; $('stRep').textContent = G.repelled; $('stTrucks').textContent = G.delivered;
+  $('fact').innerHTML = '<b>VISSTE DU?</b> ' + esc(pick(FACTS)); $('fact').hidden = false;
+  setTimeout(() => { show('overScreen'); submit(); }, win ? 300 : 1000);
+}
+function gameOver(){ finish(false); }
+function victory(){ G.score += 1000 + G.lives * 300; finish(true); }
+function tryLandscape(){
+  if (!matchMedia('(pointer:coarse)').matches) return;
+  try { const el = document.documentElement, fs = el.requestFullscreen && !document.fullscreenElement ? el.requestFullscreen() : Promise.resolve();
+    Promise.resolve(fs).then(() => screen.orientation && screen.orientation.lock ? screen.orientation.lock('landscape') : null).catch(() => {}); } catch(e){}
+}
+function start(){
+  const n = $('nameInput').value.trim(); if (!n){ $('nameInput').focus(); $('nameInput').placeholder = 'Skriv ditt namn först'; return; }
+  lsSet('vf_name', n); audio(); tryLandscape(); newGame(); state = 'play'; show(null); lastT = performance.now();
+}
+function togglePause(){ if (state === 'play'){ state = 'paused'; show('pauseScreen'); } else if (state === 'paused'){ state = 'play'; show(null); lastT = performance.now(); } }
+$('nameInput').value = lsGet('vf_name') || lsGet('hf_name') || '';
+$('playBtn').onclick = start;
+$('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') start(); });
+$('againBtn').onclick = () => { newGame(); state = 'play'; show(null); lastT = performance.now(); };
+$('menuBtn').onclick = () => { state = 'menu'; show('startScreen'); };
+$('hsBtn').onclick = () => { show('hsScreen'); loadHs(); };
+$('hsBack').onclick = () => show('startScreen');
+$('pauseBtn').onclick = togglePause;
+$('resumeBtn').onclick = togglePause;
+$('quitBtn').onclick = () => { state = 'menu'; show('startScreen'); };
+const updMute = () => { $('muteBtn').style.opacity = muted ? .4 : 1; };
+$('muteBtn').onclick = () => { muted = !muted; lsSet('vd_muted', muted ? '1' : '0'); updMute(); }; updMute();
+document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'play') togglePause(); });
+addEventListener('resize', resize); resize();
+newGame();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
