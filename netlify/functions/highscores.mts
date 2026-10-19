@@ -1,13 +1,20 @@
 import type { Config, Context } from "@netlify/functions";
 import { getStore } from "@netlify/blobs";
 
+// En topplista per spel: /api/highscores?game=<spel>
 // Varje resultat sparas som en egen nyckel: s/<inverterad poäng>.<tid>.<slump>.<namn base64url>
 // Nycklarna sorteras alfabetiskt => högst poäng först. Inga läs-ändra-skriv på samma nyckel.
 const MAX_SCORE = 999999;
 const KEEP = 200;
 const TOP = 20;
 
-const store = () => getStore({ name: "hurtgen-highscores", consistency: "strong" });
+// Rimlighetskontroll per spel: högsta poäng = base + perSec * speltid i sekunder
+const GAMES: Record<string, { store: string; base: number; perSec: number }> = {
+  hurtgen: { store: "hurtgen-highscores", base: 500, perSec: 60 },
+  "eben-emael": { store: "eben-emael-highscores", base: 2000, perSec: 60 },
+  foy: { store: "foy-highscores", base: 2000, perSec: 60 },
+  verdun: { store: "verdun-highscores", base: 2000, perSec: 60 },
+};
 
 type Entry = { name: string; score: number; ts: number; key: string };
 
@@ -27,7 +34,7 @@ function cleanName(v: unknown): string {
   return v.replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, 16);
 }
 
-async function sortedEntries(s: ReturnType<typeof store>): Promise<Entry[]> {
+async function sortedEntries(s: ReturnType<typeof getStore>): Promise<Entry[]> {
   const { blobs } = await s.list({ prefix: "s/" });
   return blobs.map(b => b.key).sort().map(parseKey).filter((e): e is Entry => e !== null);
 }
@@ -36,7 +43,10 @@ const publicList = (list: Entry[]) => list.slice(0, TOP).map(({ name, score, ts 
 const bad = (msg: string, status = 400) => Response.json({ error: msg }, { status, headers: { "cache-control": "no-store" } });
 
 export default async (req: Request, _context: Context) => {
-  const s = store();
+  const game = new URL(req.url).searchParams.get("game") || "hurtgen";
+  const cfg = GAMES[game];
+  if (!cfg) return bad("Okänt spel");
+  const s = getStore({ name: cfg.store, consistency: "strong" });
 
   if (req.method === "GET") {
     const list = await sortedEntries(s);
@@ -51,8 +61,7 @@ export default async (req: Request, _context: Context) => {
   const duration = Number(body?.duration);
   if (!name) return bad("Namn saknas");
   if (!Number.isFinite(score) || score < 0 || score > MAX_SCORE) return bad("Ogiltig poäng");
-  // Enkel rimlighetskontroll: sträcka plus bonusar för fiender och bunkrar
-  if (!Number.isFinite(duration) || duration < 1 || score > duration * 60 + 500) return bad("Orimlig poäng");
+  if (!Number.isFinite(duration) || duration < 1 || score > cfg.base + duration * cfg.perSec) return bad("Orimlig poäng");
 
   const ts = Date.now();
   const key = `s/${String(MAX_SCORE - score).padStart(6, "0")}.${ts}.${Math.random().toString(36).slice(2, 7)}.${Buffer.from(name, "utf8").toString("base64url")}`;

@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#131619">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>Fort Eben-Emael 1940</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<script src="/common.js"></script>
+<style>
+/* Gryning över betong: kall stålgrå, gräs i maj och varmt gryningsljus. Helskärmsspel i liggande läge. */
+:root{
+  color-scheme:dark;
+  --bg:#131619; --panel:#1d2126ee; --line:#4a4f55; --text:#e8e2d0; --muted:#a7a196;
+  --accent:#d9a441; --danger:#c4553a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;
+  font-family:"Special Elite",ui-monospace,monospace;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{display:block;position:fixed;inset:0}
+.screen{position:fixed;inset:0;display:flex;align-items:safe center;justify-content:center;padding-block:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:radial-gradient(ellipse at 50% 30%,#2a2f35bb,#0c0e10ee);z-index:10;overflow-y:auto}
+.screen.hidden{display:none}
+.screen.light{background:linear-gradient(90deg,#0c0e10dd,#0c0e1066 60%,#0c0e10cc)}
+.card{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px 18px;box-shadow:0 10px 40px #000a;text-align:center}
+.col{min-width:0}
+h1{font-family:Oswald,sans-serif;font-weight:700;letter-spacing:.04em;margin:0;font-size:32px;line-height:1.05;text-transform:uppercase;color:var(--accent)}
+h1 small{display:block;font-size:15px;color:var(--text);letter-spacing:.3em;margin-bottom:4px}
+h2{font-family:Oswald,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px;font-size:24px}
+p{line-height:1.45;font-size:14px;color:var(--muted);margin:10px 0}
+.brief{text-align:left;font-size:13px;border-left:3px solid var(--accent);padding:4px 0 4px 10px;margin:14px 0}
+.btn{display:block;width:100%;margin:10px 0 0;padding:14px;border:1px solid var(--accent);border-radius:4px;background:var(--accent);
+  color:#1a160c;font-family:Oswald,sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible,.ibtn:focus-visible,input:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+input{width:100%;padding:12px;margin-top:10px;font:inherit;font-size:17px;background:#0d0f11;color:var(--text);border:1px solid var(--line);border-radius:4px;text-align:center}
+.tips{text-align:left;font-size:12.5px;color:var(--muted);margin:8px 0 0;padding-left:18px}
+.tips li{margin:4px 0}
+.tips b{color:var(--text)}
+.big{font-family:Oswald,sans-serif;font-size:52px;color:var(--accent);margin:4px 0}
+.stats{display:flex;justify-content:space-around;gap:6px;font-size:13px;color:var(--muted);margin:6px 0 4px}
+.stats b{display:block;color:var(--text);font-size:18px;font-family:Oswald,sans-serif}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+td{padding:6px 4px;border-bottom:1px solid #ffffff12;text-align:left}
+td:first-child{width:34px;color:var(--muted)}
+td:last-child{text-align:right;font-family:Oswald,sans-serif;color:var(--accent);font-variant-numeric:tabular-nums}
+tr.me td{background:#d9a44122}
+.status{font-size:13px;color:var(--muted);min-height:18px;margin-top:8px}
+#cause{color:var(--danger)}
+.fact{text-align:left;font-size:12.5px;line-height:1.45;color:var(--text);background:#00000033;border-left:3px solid var(--accent);padding:8px 10px;margin:10px 0 0}
+.fact b{color:var(--accent);font-family:Oswald,sans-serif;letter-spacing:.06em;font-weight:500}
+.back{display:inline-block;margin:0 0 8px;color:var(--muted);font-size:13px;text-decoration:none}
+.back:hover{color:var(--accent)}
+.targets{list-style:none;padding:0;margin:8px 0 0;text-align:left;font-size:13px}
+.targets li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #ffffff12}
+.targets li span:last-child{color:var(--muted);white-space:nowrap}
+.sub{font-family:Oswald,sans-serif;letter-spacing:.12em;text-transform:uppercase;font-size:12px;color:var(--muted)}
+.rows{width:100%;font-size:14px;margin-top:6px}
+.rows td{border-bottom:1px solid #ffffff12}
+.rows td:first-child{width:auto;color:var(--muted)}
+.rotate{display:none;font-size:12.5px;color:var(--accent);margin:12px 0 0;text-align:center}
+@media (orientation:portrait) and (pointer:coarse){ .rotate{display:block} }
+#turn{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0c0e10f2;text-align:center;padding:0 24px}
+#turn .ico{font-size:54px;color:var(--accent)}
+#hudBtns{position:fixed;top:max(8px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right,0px));z-index:5;display:flex;gap:8px}
+.ibtn{width:38px;height:38px;border-radius:50%;border:1px solid #ffffff33;background:#0008;color:var(--text);font-size:16px;cursor:pointer}
+@media (orientation:landscape) and (max-height:560px){
+  .card.wide{max-width:780px;display:grid;grid-template-columns:1.1fr 1fr;gap:22px;text-align:left;padding:18px 20px;align-items:start}
+  .card.wide h1{font-size:28px}
+  .card.wide .brief{margin:10px 0 0}
+  .card.wide .tips{margin-top:0;font-size:12px}
+  .card.wide .tips li{margin:3px 0}
+  .card.wide input{text-align:left}
+  .card.wide .btn{padding:11px}
+  .card.wide .big{font-size:44px}
+  .card.wide .stats{justify-content:space-between}
+  .card.wide table{margin-top:0}
+  .card{padding:16px 18px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hudBtns" style="display:none"><button class="ibtn" id="pauseBtn" aria-label="Paus">❚❚</button><button class="ibtn" id="muteBtn" aria-label="Ljud">♪</button></div>
+<div id="turn" hidden><div class="ico">↻</div><h2>Vrid telefonen</h2><p>Eben-Emael spelas i liggande läge.</p></div>
+
+<div class="screen" id="startScreen">
+  <div class="card wide">
+   <div class="col">
+    <a class="back" href="/">← Alla spel</a>
+    <h1><small>Fort</small>Eben-Emael</h1>
+    <p class="brief">10 maj 1940, gryning. Belgiens starkaste fort vaktar broarna över Albertkanalen. Du leder en stormgrupp som ska landa med glidflygplan på fortets tak och slå ut kanonerna innan belgarna hinner reagera.</p>
+    <input id="nameInput" maxlength="16" placeholder="Ditt namn" autocomplete="nickname">
+    <button class="btn" id="playBtn">Starta uppdraget</button>
+    <button class="btn ghost" id="hsBtn">Topplista</button>
+    <p class="rotate">↻ Vrid telefonen till liggande läge – spelet är gjort för det.</p>
+   </div>
+   <div class="col">
+    <ul class="tips">
+      <li><b>Landning:</b> håll fingret mot skärmen för att dyka, släpp för att glida. Landa nära flaggan – och släpp precis innan du tar mark, annars blir det en hård landning.</li>
+      <li><b>På taket:</b> vänster tumme styr. Ställ dig vid ett mål och håll <b>LADDNING</b> tills laddningen sitter. Spring sedan – den detonerar efter 6 sekunder.</li>
+      <li>Du bär högst <b>3 laddningar</b>. Hämta fler vid ett glidflygplan.</li>
+      <li><b>Kulsprutor</b> sveper över taket och <b>kupolerna</b> skjuter längs sin siktlinje. Göm dig bakom glidflygplan och betongverk.</li>
+      <li><b>Attrapper</b> saknar kanoner – slösa ingen laddning på dem.</li>
+      <li><b>ELD</b> skjuter mot närmaste belgiska soldat. En fiende tål två träffar.</li>
+    </ul>
+   </div>
+  </div>
+</div>
+
+<div class="screen hidden light" id="briefScreen">
+  <div class="card wide">
+   <div class="col">
+    <div class="sub">Stormgrupp Granit</div>
+    <h2 id="briefTitle">Nivå 1</h2>
+    <p id="briefText"></p>
+    <button class="btn" id="goBtn">Påbörja inflygning</button>
+   </div>
+   <div class="col">
+    <div class="sub">Mål på taket</div>
+    <ul class="targets" id="briefList"></ul>
+    <p id="briefDummy" style="font-size:12.5px"></p>
+   </div>
+  </div>
+</div>
+
+<div class="screen hidden" id="levelScreen">
+  <div class="card wide">
+   <div class="col">
+    <h2 id="lvlTitle">Nivå 1 klar</h2>
+    <div class="big" id="lvlScore">0</div>
+    <table class="rows" id="lvlRows"></table>
+   </div>
+   <div class="col">
+    <p class="fact" id="lvlFact"></p>
+    <button class="btn" id="nextBtn">Nästa nivå</button>
+    <button class="btn ghost" id="stopBtn">Avsluta och spara</button>
+   </div>
+  </div>
+</div>
+
+<div class="screen hidden" id="overScreen">
+  <div class="card wide">
+   <div class="col">
+    <h2 id="overTitle">Stupad</h2>
+    <p id="cause"></p>
+    <div class="big" id="finalScore">0</div>
+    <div class="stats">
+      <div><b id="stLvl">1</b>nivå</div>
+      <div><b id="stTg">0</b>mål</div>
+      <div><b id="stKills">0</b>fiender</div>
+      <div><b id="stTime">0:00</b>tid</div>
+    </div>
+    <p class="fact" id="fact" hidden></p>
+   </div>
+   <div class="col">
+    <div class="status" id="submitStatus"></div>
+    <table id="overTable"></table>
+    <button class="btn" id="againBtn">Försök igen</button>
+    <button class="btn ghost" id="menuBtn">Meny</button>
+   </div>
+  </div>
+</div>
+
+<div class="screen hidden" id="hsScreen">
+  <div class="card">
+    <h2>Topplista</h2>
+    <p>Eben-Emael – de som kommit längst.</p>
+    <div class="status" id="hsStatus"></div>
+    <table id="hsTable"></table>
+    <button class="btn ghost" id="hsBack">Tillbaka</button>
+  </div>
+</div>
+
+<div class="screen hidden" id="pauseScreen">
+  <div class="card">
+    <h2>Paus</h2>
+    <button class="btn" id="resumeBtn">Fortsätt</button>
+    <button class="btn ghost" id="quitBtn">Avsluta</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============ Grund ============ */
+const $ = id => document.getElementById(id);
+const cvs = $('c'), ctx = cvs.getContext('2d');
+const W = 900, H = 440, GAME = 'eben-emael';
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const lsGet = k => VF.lsGet(k), lsSet = (k, v) => VF.lsSet(k, v);
+function angDiff(a, b){ let d = a - b; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+let dpr = 1, sc = 1, ox = 0, oy = 0, hs = 1, hudW = 400, hudH = 400;
+function resize(){
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = innerWidth, h = innerHeight;
+  cvs.width = Math.round(w * dpr); cvs.height = Math.round(h * dpr);
+  cvs.style.width = w + 'px'; cvs.style.height = h + 'px';
+  sc = Math.min(cvs.width / W, cvs.height / H); ox = (cvs.width - W * sc) / 2; oy = (cvs.height - H * sc) / 2;
+  hs = dpr * clamp(Math.min(w, h) / 390, .85, 1.5); hudW = cvs.width / hs; hudH = cvs.height / hs;
+  layout();
+}
+
+/* ============ Ljud ============ */
+let actx = null, muted = lsGet('ee_muted') === '1';
+function audio(){ if (!actx){ try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } if (actx && actx.state === 'suspended') actx.resume(); return actx; }
+const bufs = {};
+function noiseBuf(len){ const a = audio(); const k = len + ':' + a.sampleRate; if (bufs[k]) return bufs[k]; const b = a.createBuffer(1, a.sampleRate * len, a.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return bufs[k] = b; }
+function sfxBoom(vol){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime, s = a.createBufferSource(); s.buffer = noiseBuf(1.2);
+  const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(70, t + 1);
+  const g = a.createGain(); g.gain.setValueAtTime(.6 * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + 1.1); s.connect(f).connect(g).connect(a.destination); s.start(); }
+let lastRattle = 0;
+function sfxRattle(){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime; if (t - lastRattle < .09) return; lastRattle = t;
+  const s = a.createBufferSource(); s.buffer = noiseBuf(.05); const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800;
+  const g = a.createGain(); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .05); s.connect(f).connect(g).connect(a.destination); s.start(); }
+function sfxShot(v){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime, s = a.createBufferSource(); s.buffer = noiseBuf(.15);
+  const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(2400, t); f.frequency.exponentialRampToValueAtTime(300, t + .12);
+  const g = a.createGain(); g.gain.setValueAtTime(.3 * (v || 1), t); g.gain.exponentialRampToValueAtTime(.001, t + .14); s.connect(f).connect(g).connect(a.destination); s.start(); }
+function beep(freq, len, vol, type){ if (muted) return; const a = audio(); if (!a) return; const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol || .06, a.currentTime); g.gain.exponentialRampToValueAtTime(.001, a.currentTime + len); o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + len + .02); }
+function sfxWhistle(){ if (muted) return; const a = audio(); if (!a) return; const o = a.createOscillator(), g = a.createGain(), t = a.currentTime; o.type = 'sine';
+  o.frequency.setValueAtTime(1300, t); o.frequency.exponentialRampToValueAtTime(380, t + 1.6);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.06, t + .3); g.gain.exponentialRampToValueAtTime(.0001, t + 1.65); o.connect(g).connect(a.destination); o.start(); o.stop(t + 1.7); }
+let wind = null;
+function windStart(){ if (muted || wind) return; const a = audio(); if (!a) return; const s = a.createBufferSource(); s.buffer = noiseBuf(2); s.loop = true;
+  const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 450; f.Q.value = .7; const g = a.createGain(); g.gain.value = .07;
+  s.connect(f).connect(g).connect(a.destination); s.start(); wind = { s, f, g }; }
+function windStop(){ if (wind){ try { wind.s.stop(); } catch(e){} wind = null; } }
+
+/* ============ Inmatning ============ */
+const input = { keys: {}, fire: false, charge: false, dive: false, jx: 0, jy: 0 };
+const JR = 52, joy = { id: null, ox: 0, oy: 0, x: 0, y: 0, active: false }, joyHome = { x: 0, y: 0 };
+const fireBtn = { x: 0, y: 0, r: 40, id: null }, chgBtn = { x: 0, y: 0, r: 38, id: null };
+const diveIds = new Set();
+function layout(){ joyHome.x = 26 + JR + 12; joyHome.y = hudH - 30 - JR; fireBtn.x = hudW - 64; fireBtn.y = hudH - 60; chgBtn.x = hudW - 166; chgBtn.y = hudH - 50; }
+const toHud = (cx, cy) => ({ x: cx * dpr / hs, y: cy * dpr / hs });
+function pressAt(p, id){
+  if (state === 'land'){ diveIds.add(id); input.dive = true; return; }
+  if (state !== 'raid') return;
+  if (dist(p.x, p.y, fireBtn.x, fireBtn.y) < fireBtn.r + 12){ fireBtn.id = id; input.fire = true; return; }
+  if (dist(p.x, p.y, chgBtn.x, chgBtn.y) < chgBtn.r + 12){ chgBtn.id = id; input.charge = true; return; }
+  if (joy.id === null){ joy.id = id; const home = dist(p.x, p.y, joyHome.x, joyHome.y) < JR + 40;
+    joy.ox = home ? joyHome.x : p.x; joy.oy = home ? joyHome.y : p.y; joy.x = p.x; joy.y = p.y; joy.active = true; }
+}
+function moveAt(p, id){ if (id === joy.id){ joy.x = p.x; joy.y = p.y; } }
+function release(id){
+  if (id === joy.id){ joy.id = null; joy.active = false; }
+  if (id === fireBtn.id){ fireBtn.id = null; input.fire = false; }
+  if (id === chgBtn.id){ chgBtn.id = null; input.charge = false; }
+  if (diveIds.delete(id)) input.dive = diveIds.size > 0;
+}
+function resetInput(){ diveIds.clear(); input.dive = input.fire = input.charge = false; joy.id = fireBtn.id = chgBtn.id = null; joy.active = false; }
+cvs.addEventListener('touchstart', e => { e.preventDefault(); audio(); for (const t of e.changedTouches) pressAt(toHud(t.clientX, t.clientY), t.identifier); }, { passive: false });
+cvs.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) moveAt(toHud(t.clientX, t.clientY), t.identifier); }, { passive: false });
+const touchEnd = e => { for (const t of e.changedTouches) release(t.identifier); };
+cvs.addEventListener('touchend', touchEnd); cvs.addEventListener('touchcancel', touchEnd);
+let mouseDown = false;
+cvs.addEventListener('mousedown', e => { audio(); mouseDown = true; pressAt(toHud(e.clientX, e.clientY), 'm'); });
+addEventListener('mousemove', e => { if (mouseDown) moveAt(toHud(e.clientX, e.clientY), 'm'); });
+addEventListener('mouseup', () => { if (mouseDown){ mouseDown = false; release('m'); } });
+addEventListener('keydown', e => { input.keys[e.code] = true; if (e.code === 'Escape' || e.code === 'KeyP') togglePause(); });
+addEventListener('keyup', e => { input.keys[e.code] = false; });
+function readInput(){
+  const k = input.keys; let x = 0, y = 0;
+  if (k.KeyA || k.ArrowLeft) x -= 1; if (k.KeyD || k.ArrowRight) x += 1;
+  if (k.KeyW || k.ArrowUp) y -= 1; if (k.KeyS || k.ArrowDown) y += 1;
+  if (joy.active){ const dx = joy.x - joy.ox, dy = joy.y - joy.oy, m = Math.hypot(dx, dy);
+    if (m > JR){ joy.ox = joy.x - dx / m * JR; joy.oy = joy.y - dy / m * JR; }
+    const mm = Math.min(m, JR) / JR; if (m > 4){ x = dx / m * mm; y = dy / m * mm; } }
+  const m = Math.hypot(x, y); if (m > 1){ x /= m; y /= m; }
+  input.jx = x; input.jy = y;
+  return { fire: input.fire || k.Space || k.KeyF, charge: input.charge || k.KeyE || k.KeyL, dive: input.dive || k.Space || k.ArrowDown };
+}
+
+/* ============ Fortet ============ */
+// Taket sett uppifrån. Norr (Maastricht) åt höger, Albertkanalen längs överkanten.
+const PLAT = [[82, 238], [176, 118], [330, 72], [620, 58], [785, 106], [846, 200], [786, 292], [565, 358], [300, 372], [152, 332]];
+const CENTER = { x: 470, y: 222 };
+const TT = {
+  mg:    { r: 14, hp: 1, place: 1.4, pts: 150, label: 'Kulsprutebunker' },
+  kup:   { r: 15, hp: 1, place: 1.6, pts: 120, label: 'Pansarkupol 75 mm' },
+  kas:   { r: 18, hp: 1, place: 2.4, pts: 100, label: 'Kasematt' },
+  k120:  { r: 21, hp: 2, place: 2.0, pts: 250, label: 'Stora kupolen 120 mm' },
+  dummy: { r: 15, hp: 1, place: 1.6, pts: 0,   label: 'Attrapp' }
+};
+const TDEF = {
+  'mi-nord': { n: 'Mi-Nord',      t: 'mg',   x: 742, y: 152 },
+  'maas1':   { n: 'Maastricht 1', t: 'kas',  x: 700, y: 252 },
+  'kn':      { n: 'Kupol Nord',   t: 'kup',  x: 585, y: 128 },
+  'vise1':   { n: 'Visé 1',       t: 'kas',  x: 238, y: 262 },
+  'ks':      { n: 'Kupol Syd',    t: 'kup',  x: 330, y: 148 },
+  'mi-syd':  { n: 'Mi-Syd',       t: 'mg',   x: 205, y: 190 },
+  'k120':    { n: 'Kupol 120',    t: 'k120', x: 470, y: 230 },
+  'maas2':   { n: 'Maastricht 2', t: 'kas',  x: 612, y: 312 },
+  'vise2':   { n: 'Visé 2',       t: 'kas',  x: 372, y: 322 }
+};
+const ORDER = ['mi-nord', 'maas1', 'kn', 'vise1', 'ks', 'mi-syd', 'k120', 'maas2', 'vise2'];
+const DUMMIES = [[445, 108], [528, 318], [690, 186], [292, 236]];
+const ENTRY = [[70, 300], [470, 395], [860, 250], [250, 75], [700, 80]];
+
+const CAUSE = {
+  mg: 'Träffad av kulspruteeld från ett av fortets försvarsverk.',
+  kup: 'Träffad av eld från en pansarkupol.',
+  k120: 'Träffad av eld från den stora 120 mm-kupolen.',
+  inf: 'Nedskjuten av belgiskt infanteri som tagit sig upp på taket.',
+  art: 'Träffad av artilleri från grannforten.',
+  blast: 'För nära när den egna laddningen detonerade.',
+  time: 'Tiden rann ut. Belgarna hann bemanna kanonerna och broarna över Albertkanalen kunde inte tas.',
+  quit: 'Uppdraget avbröts. Poängen är sparad.'
+};
+const FACTS = {
+  mg: ['Fortets tak försvarades av kulsprutor, men de flesta av kanonerna pekade utåt mot omgivningen och inte mot taket. Ingen hade räknat med att fienden skulle landa ovanpå fortet.'],
+  kup: ['Pansarkupolerna kunde vridas runt och sänkas ner i betongen för skydd. Den stora kupolen hade två 120 mm-kanoner med nästan två mils räckvidd.'],
+  k120: ['Pansarkupolerna kunde vridas runt och sänkas ner i betongen för skydd. Den stora kupolen hade två 120 mm-kanoner med nästan två mils räckvidd.'],
+  inf: ['Belgarna gjorde flera försök att driva bort angriparna från taket, men stormtrupperna höll ut tills tyska markförband nådde fram dagen därpå.'],
+  art: ['Grannforten Pontisse och Barchon vid Liège besköt Eben-Emaels tak med artilleri för att få bort angriparna.'],
+  blast: ['Hålladdningarna vägde upp till 50 kg och riktade sprängkraften mot en enda punkt. De användes i strid för första gången här och kunde slå hål på pansar och betong.'],
+  time: ['Uppdraget var att tysta fortets kanoner så att de inte kunde skjuta mot broarna över Albertkanalen vid Veldwezelt, Vroenhoven och Kanne. Två av broarna togs intakta – bron vid Kanne hann belgarna spränga.']
+};
+// En ny bit av historien för varje avklarad nivå
+const STORY = [
+  'Fort Eben-Emael stod klart 1935 vid Albertkanalen nära Maastricht och ansågs vara ett av världens starkaste fort.',
+  'Strax före halv fem på morgonen den 10 maj 1940 landade tyska glidflygplan direkt på fortets tak. De gled fram nästan ljudlöst i gryningen.',
+  'Stormgrupp Granit bestod av drygt 70 man. I fortet fanns omkring 1 200 belgiska soldater – men de flesta befann sig långt nere i fortets tunnlar.',
+  'Hålladdningar användes i strid för första gången vid Eben-Emael. De riktade sprängkraften mot en punkt och kunde slå hål på pansarkupolerna.',
+  'Stormtrupperna hade övat i månader på kopior av fortets verk. Övningarna var så hemliga att soldaterna inte fick lämna förläggningen.',
+  'Chefen för stormgruppen, Rudolf Witzig, kom fram flera timmar för sent – bogserlinan till hans glidflygplan hade brustit. Underbefälet tog över och genomförde uppdraget eftersom alla visste vad målet var.',
+  'På fortets tak fanns attrapper – falska kupoler som skulle lura en angripare. Tack vare god underrättelseinhämtning visste tyskarna vilka mål som var äkta.',
+  'Grannforten Pontisse och Barchon vid Liège besköt Eben-Emaels tak med artilleri för att få bort angriparna.',
+  'Fortet kapitulerade vid lunchtid den 11 maj 1940, drygt ett dygn efter landningen, när tyska markförband nått fram över Albertkanalen.',
+  'Uppdraget gällde egentligen broarna. Fortets kanoner skulle tystas så att de inte kunde skjuta mot broarna vid Veldwezelt, Vroenhoven och Kanne.'
+];
+
+function pointInPoly(x, y, poly){ let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++){ const [xi, yi] = poly[i], [xj, yj] = poly[j];
+  if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) c = !c; } return c; }
+
+/* ============ Spelstatus ============ */
+let G = null, state = 'menu', lastT = 0;
+function newGame(){
+  G = { score: 0, level: 0, time: 0, kills: 0, destroyed: 0, hp: 100, lastCause: 'mg', moved: false,
+        tg: [], gliders: [], bombs: [], inf: [], shells: [], parts: [], tracers: [], toasts: [], craters: [], shake: 0, flash: 0,
+        deco: makeDeco() };
+}
+function makeDeco(){
+  const d = { patches: [], hedges: [] };
+  for (let i = 0; i < 70; i++){ const x = rand(90, 840), y = rand(70, 370); if (pointInPoly(x, y, PLAT)) d.patches.push({ x, y, r: rand(14, 40), a: rand(.05, .14), t: Math.random() < .5 }); }
+  for (let i = 0; i < 14; i++){ const y0 = rand(60, 440); d.hedges.push({ x1: -60, y1: y0, x2: W + 60, y2: y0 + rand(-120, 120) }); }
+  return d;
+}
+function buildLevel(L){
+  const n = Math.min(9, 3 + L), nd = Math.min(4, 1 + Math.floor(L / 2));
+  G.tg = ORDER.slice(0, n).map(id => { const d = TDEF[id], tt = TT[d.t];
+    const base = Math.atan2(CENTER.y - d.y, CENTER.x - d.x);
+    return { id, n: d.n, t: d.t, x: d.x, y: d.y, r: tt.r, hp: tt.hp, pend: 0, dead: false,
+      aim: rand(0, 6.28), base, ph: rand(0, 6.28), amp: 1.25, half: .17, spd: .55 + .07 * L, range: 290 + 8 * L,
+      rot: (Math.random() < .5 ? -1 : 1) * (d.t === 'k120' ? .32 : .48) * (1 + .07 * (L - 1)), cd: rand(.5, 1.5) }; });
+  DUMMIES.slice(0, nd).forEach(([x, y]) => G.tg.push({ id: 'dummy', n: '', t: 'dummy', x, y, r: TT.dummy.r, hp: 1, pend: 0, dead: false, aim: rand(0, 6.28) }));
+  G.timeLimit = Math.max(150, Math.round(110 + 20 * n - 5 * (L - 1)));
+  G.bombs = []; G.inf = []; G.shells = []; G.tracers = []; G.craters = []; G.gliders = [];
+}
+function startLevel(L){
+  G.level = L; buildLevel(L);
+  $('briefTitle').textContent = 'Nivå ' + L;
+  $('briefText').textContent = (L === 1 ? 'Gryning den 10 maj 1940. ' : '') + 'Slå ut alla mål på taket inom ' + fmtTime(G.timeLimit) + '. Fiendens motstånd ökar för varje nivå.';
+  const real = G.tg.filter(t => t.t !== 'dummy');
+  $('briefList').innerHTML = real.map(t => `<li><span>${esc(t.n)}</span><span>${esc(TT[t.t].label)}${TT[t.t].hp > 1 ? ' · 2 laddningar' : ''}</span></li>`).join('');
+  const nd = G.tg.length - real.length;
+  $('briefDummy').textContent = nd ? `Underrättelser: ${nd} attrapp${nd > 1 ? 'er' : ''} finns på taket. De saknar kanoner.` : '';
+  state = 'brief'; show('briefScreen');
+}
+function fmtTime(s){ s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function toast(txt, col, t){ G.toasts.push({ txt, col: col || '#e8e2d0', t: t || 2.2 }); if (G.toasts.length > 4) G.toasts.shift(); }
+function hurt(a, cause){ G.hp -= a; G.lastCause = cause; G.hurtT = .3; if (a > 12){ G.flash = .5; G.shake = Math.max(G.shake, 8); if (navigator.vibrate) navigator.vibrate(50); } }
+function burst(x, y, n, cols, sp){ for (let i = 0; i < n; i++){ const a = rand(0, 6.28), v = rand(sp * .3, sp);
+  G.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: rand(.4, 1), max: 1, c: cols[i % cols.length], s: rand(1.5, 3.5) }); } }
+
+/* ============ Inflygning ============ */
+function groundY(x){ if (x < 300) return 396; if (x < 345) return 396 - (x - 300) / 45 * 66; if (x <= 722) return 330; return 432; }
+function beginLanding(){
+  const L = G.level;
+  G.gl = { x: -60, y: 70, vy: 10, pitch: 0, hit: 0 };
+  G.lz = rand(440, 640); G.landT = 0;
+  G.aa = [];
+  const na = Math.min(4, 1 + Math.ceil(L / 2));
+  for (let i = 0; i < na; i++) G.aa.push({ x: 400 + i * (300 / Math.max(1, na - 1 || 1)) + rand(-20, 20), y: 326, ph: rand(0, 6), spd: .9 + .12 * L, off: rand(0, 6), ang: -1.5, on: false });
+  G.toasts = []; toast('Bogserlinan släppt – glid in mot fortet', '#e8e2d0', 2.6);
+  resetInput(); state = 'land'; show(null); windStart();
+}
+function updLand(dt, inp){
+  const g = G.gl; G.landT += dt; G.time += dt;
+  const target = inp.dive ? 90 : 13;
+  g.vy += (target - g.vy) * Math.min(1, dt * 4);
+  g.x += 92 * dt; g.y += g.vy * dt; g.pitch = Math.atan2(g.vy, 92);
+  g.hit = Math.max(0, g.hit - dt);
+  if (wind) wind.f.frequency.value = 380 + g.vy * 7;
+  for (const a of G.aa){
+    a.ph += dt * a.spd; a.ang = -Math.PI / 2 + Math.sin(a.ph) * 1.05; a.on = Math.sin(a.ph * 2.1 + a.off) > -.25;
+    if (a.on && g.x > -30){ const dx = g.x - a.x, dy = g.y - a.y, Ld = Math.hypot(dx, dy);
+      if (Ld < 440 && Math.abs(angDiff(Math.atan2(dy, dx), a.ang)) < .075){ hurt(26 * dt, 'mg'); g.hit = .2; sfxRattle(); } }
+  }
+  const gy = groundY(g.x);
+  if (g.y >= gy - 3){
+    if (g.x < 345) landEnd(g.x, 'short'); else if (g.x <= 722) landEnd(g.x, g.vy > 55 ? 'hard' : 'ok'); else landEnd(g.x, 'canal');
+  } else if (g.x > 770) landEnd(770, 'canal');
+  if (G.hp <= 0) gameOver('mg');
+}
+function landEnd(x, kind){
+  windStop(); sfxBoom(.35); G.toasts = [];
+  let sx, sy = 222 + rand(-25, 25);
+  if (kind === 'short'){ hurt(18, 'mg'); toast('Landade utanför fortet – ta dig upp på taket!', '#e2b56c', 3); sx = 150; sy = 260; }
+  else if (kind === 'canal'){ hurt(28, 'mg'); toast('Nödlandning vid kanalkanten!', '#e2b56c', 3); sx = 790; sy = 200; }
+  else {
+    const bonus = Math.round(Math.max(0, 120 - Math.abs(x - G.lz) * .7));
+    G.score += bonus;
+    if (kind === 'hard'){ hurt(14, 'mg'); toast('Hård landning! +' + bonus, '#e2b56c', 2.6); } else toast('Mjuk landning! +' + bonus, '#e7c96a', 2.6);
+    sx = 150 + (clamp(x, 345, 720) - 345) / 375 * 640;
+  }
+  if (G.hp <= 0){ G.hp = 0; return gameOver('mg'); }
+  // eget glidflygplan och tre till från stormgruppen
+  const free = (x, y, m) => pointInPoly(x, y, PLAT) && G.tg.every(t => dist(x, y, t.x, t.y) > t.r + m) && G.gliders.every(g => dist(x, y, g.x, g.y) > 70);
+  for (let k = 0; k < 40 && !free(sx, sy, 34); k++){ sx += rand(-20, 20); sy += rand(-20, 20); sx = clamp(sx, 120, 820); sy = clamp(sy, 90, 350); }
+  G.gliders = [{ x: sx, y: sy - 14, ang: rand(-.4, .4), own: true }];
+  for (let k = 0, tries = 0; k < 3 && tries < 300; tries++){ const x = rand(150, 800), y = rand(90, 340); if (free(x, y, 46)){ G.gliders.push({ x, y, ang: rand(-.6, .6) }); k++; } }
+  G.p = { x: sx, y: sy + 8, r: 8, ang: -Math.PI / 2, walk: 0, charges: 3, prog: 0, refT: 0, cd: 0 };
+  G.left = G.timeLimit - (kind === 'short' || kind === 'canal' ? 15 : 0);
+  G.raidT = 0; G.infT = Math.max(12, 26 - 2 * G.level); G.artT = Math.max(18, 44 - 3 * G.level); G.artWarned = false; G.doneT = 0;
+  resetInput(); state = 'raid';
+}
+
+/* ============ Räden ============ */
+function blockers(){ return G.tg.map(t => ({ x: t.x, y: t.y, r: t.r + 2, o: t })).concat(G.gliders.map(g => ({ x: g.x, y: g.y, r: 15, o: g }))); }
+function losBlocked(ax, ay, bx, by, self){
+  const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy || 1;
+  for (const o of blockers()){ if (o.o === self) continue;
+    const u = ((o.x - ax) * dx + (o.y - ay) * dy) / L2; if (u <= .04 || u >= .96) continue;
+    if (dist(ax + u * dx, ay + u * dy, o.x, o.y) < o.r * .85) return true; }
+  return false;
+}
+function pushOut(e, rad){ for (const o of blockers()){ const d = dist(e.x, e.y, o.x, o.y), m = o.r + rad; if (d < m && d > 0){ e.x = o.x + (e.x - o.x) / d * m; e.y = o.y + (e.y - o.y) / d * m; } } }
+function updRaid(dt, inp){
+  const p = G.p, L = G.level; G.time += dt; G.raidT += dt;
+  if (G.doneT > 0){ G.doneT -= dt; updFx(dt); if (G.doneT <= 0) levelDone(); return; }
+  G.left -= dt; if (G.left <= 0){ G.left = 0; return gameOver('time'); }
+  // förflyttning
+  const mv = Math.hypot(input.jx, input.jy);
+  if (mv > .05){ p.ang = Math.atan2(input.jy, input.jx); p.walk += dt * 80 * .12 * mv; if (mv > .3) G.moved = true; }
+  const nx = p.x + input.jx * 80 * dt, ny = p.y + input.jy * 80 * dt;
+  const onRoof = pointInPoly(p.x, p.y, PLAT);
+  if (!onRoof || pointInPoly(nx, ny, PLAT)){ p.x = nx; p.y = ny; }
+  else if (pointInPoly(nx, p.y, PLAT)) p.x = nx; else if (pointInPoly(p.x, ny, PLAT)) p.y = ny;
+  p.x = clamp(p.x, 20, W - 20); p.y = clamp(p.y, 60, H - 20);
+  pushOut(p, p.r);
+  // laddning
+  let near = null, nd = 1e9;
+  for (const t of G.tg){ if (t.dead) continue; const d = dist(p.x, p.y, t.x, t.y); if (d < t.r + 18 && d < nd && t.pend < t.hp){ near = t; nd = d; } }
+  G.near = near;
+  if (inp.charge && near && p.charges > 0){
+    p.prog += dt / TT[near.t].place; if (Math.random() < 8 * dt) beep(240 + p.prog * 400, .04, .03, 'square');
+    if (p.prog >= 1){ p.prog = 0; p.charges--; near.pend++;
+      G.bombs.push({ x: near.x + rand(-4, 4), y: near.y + rand(-4, 4), fuse: 6, tgt: near, last: 6 });
+      toast('Laddning placerad – ta skydd!', '#e2b56c'); beep(880, .12, .08); }
+  } else p.prog = Math.max(0, p.prog - dt * 2);
+  // påfyllning vid glidflygplan
+  const atGlider = G.gliders.some(g => dist(p.x, p.y, g.x, g.y) < 32);
+  if (atGlider && p.charges < 3){ p.refT += dt; if (p.refT > .5){ p.refT = 0; p.charges++; beep(660, .08, .06, 'triangle'); if (p.charges === 3) toast('Fullt med laddningar', '#c9d2a0'); } } else p.refT = 0;
+  // laddningar som brinner
+  for (const b of G.bombs){ b.fuse -= dt; if (Math.ceil(b.fuse) < Math.ceil(b.last)) beep(b.fuse < 2 ? 1400 : 1000, .05, .05); b.last = b.fuse; if (b.fuse <= 0) explode(b); }
+  G.bombs = G.bombs.filter(b => b.fuse > 0);
+  // vapen i fortet
+  for (const t of G.tg){
+    if (t.dead || t.t === 'kas' || t.t === 'dummy') continue;
+    const d = dist(p.x, p.y, t.x, t.y), pa = Math.atan2(p.y - t.y, p.x - t.x);
+    if (t.t === 'mg'){
+      t.ph += dt * t.spd; t.aim = t.base + Math.sin(t.ph) * t.amp; t.firing = false;
+      if (d < t.range && Math.abs(angDiff(pa, t.aim)) < t.half && !losBlocked(t.x, t.y, p.x, p.y, t)){
+        t.firing = true; hurt((28 + 2 * L) * dt, 'mg'); sfxRattle();
+        if (Math.random() < .5) G.tracers.push({ x1: t.x, y1: t.y, x2: p.x + rand(-12, 12), y2: p.y + rand(-12, 12), t: .07 });
+      } else if (Math.random() < 2.2 * dt) G.tracers.push({ x1: t.x, y1: t.y, x2: t.x + Math.cos(t.aim) * t.range, y2: t.y + Math.sin(t.aim) * t.range, t: .06 });
+    } else {
+      t.aim += t.rot * dt; t.cd = Math.max(0, t.cd - dt);
+      t.lock = d < t.range && Math.abs(angDiff(pa, t.aim)) < .15 && !losBlocked(t.x, t.y, p.x, p.y, t);
+      if (t.lock && t.cd <= 0){
+        const big = t.t === 'k120'; t.cd = big ? 2.1 : 1.5; t.flashT = .12; sfxShot(big ? 1.6 : 1.2);
+        const hit = Math.random() < .62, ex = p.x + (hit ? 0 : rand(-26, 26)), ey = p.y + (hit ? 0 : rand(-26, 26));
+        G.tracers.push({ x1: t.x + Math.cos(t.aim) * t.r, y1: t.y + Math.sin(t.aim) * t.r, x2: ex, y2: ey, t: .1, big: true });
+        burst(ex, ey, 10, ['#e8a24a', '#6b6658', '#3b3a32'], 90);
+        if (hit) hurt(big ? 26 : 19, big ? 'k120' : 'kup');
+      }
+      t.flashT = Math.max(0, (t.flashT || 0) - dt);
+    }
+  }
+  // belgiskt infanteri
+  G.infT -= dt;
+  if (G.infT <= 0 && G.inf.length < 2 + L){
+    G.infT = Math.max(3.2, 11 - .8 * L) * rand(.8, 1.2);
+    const [ex, ey] = pick(ENTRY); G.inf.push({ x: ex, y: ey, hp: 2, spd: 30 + 3 * L, cd: rand(.6, 1.2), walk: 0, ang: 0, hitT: 0 });
+  }
+  for (const q of G.inf){
+    const d = dist(p.x, p.y, q.x, q.y), pa = Math.atan2(p.y - q.y, p.x - q.x), sees = !losBlocked(q.x, q.y, p.x, p.y);
+    q.ang = pa; q.hitT = Math.max(0, q.hitT - dt);
+    if (d > 130 || !sees){ q.x += Math.cos(pa) * q.spd * dt; q.y += Math.sin(pa) * q.spd * dt; q.walk += dt * q.spd * .12; pushOut(q, 7); }
+    q.cd -= dt;
+    if (sees && d < 170 && q.cd <= 0){ q.cd = rand(.9, 1.3); sfxShot(.5);
+      const hit = Math.random() < .42; G.tracers.push({ x1: q.x, y1: q.y, x2: p.x + (hit ? 0 : rand(-14, 14)), y2: p.y + (hit ? 0 : rand(-14, 14)), t: .06 });
+      if (hit) hurt(8, 'inf'); }
+    if (d < p.r + 8) hurt(25 * dt, 'inf');
+  }
+  // egen eld
+  p.cd = Math.max(0, p.cd - dt); let best = null, bd = 230;
+  for (const q of G.inf){ const d = dist(p.x, p.y, q.x, q.y); if (d < bd && !losBlocked(p.x, p.y, q.x, q.y)){ bd = d; best = q; } }
+  G.aimT = best;
+  if (inp.fire && p.cd <= 0){
+    p.cd = .24; sfxShot(.8);
+    if (best){ p.ang = Math.atan2(best.y - p.y, best.x - p.x);
+      const hit = Math.random() < .84 - bd / 1100;
+      G.tracers.push({ x1: p.x, y1: p.y, x2: best.x + (hit ? 0 : rand(-14, 14)), y2: best.y + (hit ? 0 : rand(-14, 14)), t: .06, mine: true });
+      if (hit){ best.hp--; best.hitT = .2; burst(best.x, best.y, 5, ['#7a6a4a', '#3b3226'], 50);
+        if (best.hp <= 0){ best.dead = true; G.kills++; G.score += 30; toast('Fiende nedkämpad +30', '#e7c96a', 1.4); } }
+    } else G.tracers.push({ x1: p.x, y1: p.y, x2: p.x + Math.cos(p.ang) * 180, y2: p.y + Math.sin(p.ang) * 180, t: .06, mine: true });
+  }
+  G.inf = G.inf.filter(q => !q.dead);
+  // artilleri från grannforten
+  G.artT -= dt;
+  if (G.artT <= 0){
+    G.artT = Math.max(2.8, 8 - .45 * L) * rand(.8, 1.2);
+    if (!G.artWarned){ G.artWarned = true; toast('Grannforten beskjuter taket!', '#e06a4a', 2.6); }
+    const a = rand(0, 6.28), r = rand(0, 100);
+    G.shells.push({ x: p.x + Math.cos(a) * r + input.jx * 50, y: p.y + Math.sin(a) * r + input.jy * 50, t: 1.8, max: 1.8, R: 56 });
+    sfxWhistle();
+  }
+  for (const s of G.shells){ s.t -= dt; if (s.t <= 0 && !s.done){ s.done = true; sfxBoom(.9); G.shake = Math.max(G.shake, 8);
+    burst(s.x, s.y, 30, ['#e8a24a', '#f4d27a', '#4a463a', '#7a7466'], 200); G.craters.push({ x: s.x, y: s.y, r: 17 });
+    const d = dist(p.x, p.y, s.x, s.y); if (d < s.R) hurt(44 * (1 - d / s.R) + 10, 'art');
+    for (const q of G.inf) if (dist(q.x, q.y, s.x, s.y) < s.R) q.dead = true; } }
+  G.shells = G.shells.filter(s => !s.done); G.inf = G.inf.filter(q => !q.dead);
+  updFx(dt);
+  if (G.hp <= 0){ G.hp = 0; gameOver(G.lastCause); }
+}
+function explode(b){
+  const t = b.tgt, p = G.p, R = 72;
+  sfxBoom(1.1); G.shake = Math.max(G.shake, 12);
+  burst(b.x, b.y, 40, ['#f4d27a', '#e8a24a', '#9a9a90', '#3b3a32', '#cfcabb'], 240); G.craters.push({ x: b.x, y: b.y, r: 12 });
+  const d = dist(p.x, p.y, b.x, b.y); if (d < R) hurt(70 * (1 - d / R) + 10, 'blast');
+  for (const q of G.inf) if (dist(q.x, q.y, b.x, b.y) < R){ q.dead = true; G.kills++; G.score += 30; }
+  t.pend = Math.max(0, t.pend - 1);
+  if (t.t === 'dummy'){ t.dead = true; t.revealed = true; toast('Attrapp! Laddningen gick till spillo', '#e06a4a', 2.6); return; }
+  t.hp--;
+  if (t.hp <= 0 && !t.dead){
+    t.dead = true; const pts = TT[t.t].pts; G.score += pts; G.destroyed++;
+    toast(t.n + ' utslagen +' + pts, '#e7c96a', 2.4);
+    if (G.tg.every(x => x.dead || x.t === 'dummy')){ G.doneT = 1.6; toast('Alla mål utslagna!', '#e7c96a', 2.4); }
+  } else if (t.hp > 0) toast(t.n + ' skadad – en laddning till!', '#e2b56c', 2.4);
+}
+function updFx(dt){
+  for (const pt of G.parts){ pt.t -= dt; pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vx *= .92; pt.vy *= .92; }
+  G.parts = G.parts.filter(pt => pt.t > 0);
+  for (const tr of G.tracers) tr.t -= dt; G.tracers = G.tracers.filter(t => t.t > 0);
+  for (const t of G.toasts) t.t -= dt; G.toasts = G.toasts.filter(t => t.t > 0);
+  G.shake = Math.max(0, G.shake - 30 * dt); G.flash = Math.max(0, G.flash - dt * 1.5); G.hurtT = Math.max(0, (G.hurtT || 0) - dt);
+}
+
+/* ============ Ritning ============ */
+function drawSoldier(x, y, ang, walk, body, helm, s){
+  ctx.save(); ctx.translate(x, y); ctx.rotate(ang + Math.PI / 2); ctx.scale(s, s);
+  const sw = Math.sin(walk) * 3;
+  ctx.fillStyle = '#1d1a14'; ctx.fillRect(-5, -2 + sw, 3.4, 8); ctx.fillRect(1.6, -2 - sw, 3.4, 8);
+  ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, 0, 8, 5.5, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#2a2418'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, -2); ctx.lineTo(5, -14); ctx.stroke();
+  ctx.fillStyle = helm; ctx.beginPath(); ctx.arc(0, -1, 4.6, 0, 7); ctx.fill();
+  ctx.restore();
+}
+function drawGliderTop(g){
+  ctx.save(); ctx.translate(g.x, g.y); ctx.rotate(g.ang);
+  ctx.fillStyle = '#0006'; ctx.beginPath(); ctx.ellipse(3, 4, 26, 8, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#5d6450'; ctx.fillRect(-9, -24, 7, 48);              // vinge
+  ctx.fillStyle = '#6c735d'; ctx.beginPath(); ctx.ellipse(0, 0, 24, 4.5, 0, 0, 7); ctx.fill(); // kropp
+  ctx.fillStyle = '#5d6450'; ctx.fillRect(17, -8, 4, 16);              // stabilisator
+  ctx.fillStyle = '#9aa38c'; ctx.fillRect(-18, -1.5, 6, 3);            // cockpit
+  ctx.restore();
+}
+function drawStructure(t, showAim){
+  const tt = TT[t.t];
+  ctx.save(); ctx.translate(t.x, t.y);
+  ctx.fillStyle = '#0005'; ctx.beginPath(); ctx.arc(3, 4, t.r + 6, 0, 7); ctx.fill();
+  if (t.t === 'kas'){
+    const a = Math.atan2(t.y - CENTER.y, t.x - CENTER.x);
+    ctx.rotate(a);
+    ctx.fillStyle = t.dead ? '#5e5d57' : '#9b9a90'; ctx.fillRect(-t.r, -t.r * .8, t.r * 2, t.r * 1.6);
+    ctx.fillStyle = t.dead ? '#3a3935' : '#7d7c73'; ctx.fillRect(-t.r + 3, -t.r * .8 + 3, t.r * 2 - 6, t.r * 1.6 - 6);
+    ctx.fillStyle = '#1b1b18'; for (let i = -1; i <= 1; i++) ctx.fillRect(t.r - 4, i * 7 - 2, 6, 4);
+  } else if (t.t === 'mg'){
+    ctx.fillStyle = t.dead ? '#5e5d57' : '#92918a'; ctx.beginPath(); ctx.roundRect(-t.r, -t.r * .75, t.r * 2, t.r * 1.5, 4); ctx.fill();
+    ctx.fillStyle = '#1b1b18'; ctx.fillRect(-t.r + 3, -2, t.r * 2 - 6, 3);
+    if (!t.dead){ ctx.rotate(t.aim || 0); ctx.fillStyle = '#111'; ctx.fillRect(4, -1.6, 17, 3.2); if (t.firing && Math.random() < .6){ ctx.fillStyle = '#ffd27a'; ctx.beginPath(); ctx.arc(22, 0, 3.5, 0, 7); ctx.fill(); } }
+  } else {
+    // kupol (äkta eller attrapp)
+    ctx.fillStyle = t.dead ? '#55544e' : '#8f8e85'; ctx.beginPath(); ctx.arc(0, 0, t.r + 5, 0, 7); ctx.fill();
+    const gr = ctx.createRadialGradient(-t.r * .35, -t.r * .35, 2, 0, 0, t.r);
+    gr.addColorStop(0, t.dead ? '#4b4b46' : '#7c8078'); gr.addColorStop(1, t.dead ? '#26261f' : '#3b3e38');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, t.r, 0, 7); ctx.fill();
+    if (t.t !== 'dummy' && !t.dead){
+      ctx.rotate(t.aim); ctx.fillStyle = '#16171a';
+      const len = t.t === 'k120' ? 26 : 20, gap = t.t === 'k120' ? 5 : 4;
+      ctx.fillRect(t.r * .3, -gap - 2, len, 3.4); ctx.fillRect(t.r * .3, gap - 1.4, len, 3.4);
+      if (t.flashT > 0){ ctx.fillStyle = '#ffd890'; ctx.beginPath(); ctx.arc(t.r * .3 + len + 4, 0, 7, 0, 7); ctx.fill(); }
+    }
+    if (t.dead && t.t !== 'dummy'){ ctx.strokeStyle = '#1a1a17'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-8, -6); ctx.lineTo(4, 2); ctx.lineTo(-2, 9); ctx.stroke(); }
+  }
+  ctx.restore();
+  if (t.dead && t.t !== 'dummy' && Math.random() < .25) G.parts.push({ x: t.x + rand(-6, 6), y: t.y, vx: rand(-4, 4), vy: -rand(10, 22), t: 1.3, max: 1.3, c: '#5a5a55', s: rand(3, 6) });
+}
+function drawWorldBase(){
+  // åkrar och häckar runt fortet
+  ctx.fillStyle = '#3f4630'; ctx.fillRect(-600, -600, W + 1200, H + 1200);
+  ctx.strokeStyle = '#2b3122'; ctx.lineWidth = 6;
+  for (const h of G.deco.hedges){ ctx.beginPath(); ctx.moveTo(h.x1, h.y1); ctx.lineTo(h.x2, h.y2); ctx.stroke(); }
+  // Albertkanalen och kanalskärningen
+  ctx.fillStyle = '#34495a'; ctx.fillRect(-600, -600, W + 1200, 632);
+  ctx.fillStyle = '#4a6172'; for (let x = -40; x < W + 40; x += 46) ctx.fillRect(x + (Math.sin(x) * 10), 14 + (x % 3) * 5, 22, 1.5);
+  ctx.fillStyle = '#6d695c'; ctx.fillRect(-600, 32, W + 1200, 18);
+  ctx.fillStyle = '#56534a'; for (let x = -40; x < W + 40; x += 14) ctx.fillRect(x, 32, 2, 18);
+  ctx.fillStyle = 'rgba(232,226,208,.35)'; ctx.font = 'italic 11px "Special Elite", monospace'; ctx.textAlign = 'center';
+  ctx.fillText('A L B E R T K A N A L E N', W * .3, 24);
+  // taket
+  ctx.beginPath(); PLAT.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
+  ctx.fillStyle = '#76804d'; ctx.fill(); ctx.strokeStyle = '#2f2d22'; ctx.lineWidth = 5; ctx.stroke();
+  ctx.save(); ctx.clip();
+  for (const pz of G.deco.patches){ ctx.globalAlpha = pz.a; ctx.fillStyle = pz.t ? '#9aa36a' : '#59603a'; ctx.beginPath(); ctx.ellipse(pz.x, pz.y, pz.r, pz.r * .6, 0, 0, 7); ctx.fill(); }
+  ctx.restore(); ctx.globalAlpha = 1;
+  for (const c of G.craters){ ctx.fillStyle = '#26241c'; ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, 7); ctx.fill(); ctx.strokeStyle = '#5a5444'; ctx.lineWidth = 3; ctx.stroke(); }
+}
+function drawRaid(){
+  drawWorldBase();
+  const p = G.p, live = state === 'raid' && p;
+  // siktlinjer och kulsprutekoner
+  for (const t of G.tg){ if (t.dead) continue;
+    if (t.t === 'mg' && t.aim !== undefined && live){ ctx.fillStyle = t.firing ? 'rgba(230,120,60,.22)' : 'rgba(240,210,120,.10)';
+      ctx.beginPath(); ctx.moveTo(t.x, t.y); ctx.arc(t.x, t.y, t.range, t.aim - t.half, t.aim + t.half); ctx.closePath(); ctx.fill(); }
+    if ((t.t === 'kup' || t.t === 'k120') && live){ ctx.strokeStyle = t.lock ? 'rgba(230,80,50,.55)' : 'rgba(240,210,120,.18)'; ctx.lineWidth = t.lock ? 2 : 1.2; ctx.setLineDash([5, 6]);
+      ctx.beginPath(); ctx.moveTo(t.x, t.y); ctx.lineTo(t.x + Math.cos(t.aim) * t.range, t.y + Math.sin(t.aim) * t.range); ctx.stroke(); ctx.setLineDash([]); }
+  }
+  for (const g of G.gliders) drawGliderTop(g);
+  for (const t of G.tg) drawStructure(t);
+  // namn på målen
+  ctx.textAlign = 'center'; ctx.font = '500 10px Oswald, sans-serif';
+  for (const t of G.tg){
+    if (t.t === 'dummy'){ if (t.revealed){ ctx.fillStyle = 'rgba(224,106,74,.9)'; ctx.fillText('ATTRAPP', t.x, t.y - t.r - 9); } continue; }
+    ctx.fillStyle = t.dead ? 'rgba(232,226,208,.35)' : 'rgba(232,226,208,.9)';
+    ctx.fillText(t.dead ? t.n + ' ✕' : t.n, t.x, t.y - t.r - 9);
+    if (t.hp > 1 && !t.dead){ ctx.fillStyle = '#e2b56c'; ctx.fillText('2 laddningar', t.x, t.y + t.r + 16); }
+  }
+  // mål inom räckhåll
+  if (live && G.near){ ctx.strokeStyle = `rgba(217,164,65,${.5 + .4 * Math.sin(G.time * 8)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(G.near.x, G.near.y, G.near.r + 9, 0, 7); ctx.stroke(); }
+  // laddningar
+  for (const b of G.bombs){
+    ctx.strokeStyle = `rgba(224,90,60,${.25 + .35 * (1 - b.fuse / 6)})`; ctx.lineWidth = 1.5; ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.arc(b.x, b.y, 72, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    const blink = Math.sin(G.time * (6 + (6 - b.fuse) * 3)) > 0;
+    ctx.fillStyle = blink ? '#ff5a3a' : '#7a2a1e'; ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, 7); ctx.fill();
+    ctx.fillStyle = '#f4e3c0'; ctx.font = '700 13px Oswald, sans-serif'; ctx.fillText(Math.ceil(b.fuse), b.x, b.y - 8);
+  }
+  // spår
+  for (const tr of G.tracers){ ctx.strokeStyle = tr.mine ? 'rgba(255,245,210,.95)' : tr.big ? 'rgba(255,200,120,.95)' : 'rgba(255,214,120,.8)'; ctx.lineWidth = tr.big ? 2.4 : 1.3;
+    ctx.beginPath(); ctx.moveTo(tr.x1, tr.y1); ctx.lineTo(tr.x2, tr.y2); ctx.stroke(); }
+  // belgare
+  for (const q of G.inf){ drawSoldier(q.x, q.y, q.ang, q.walk, q.hitT ? '#c0603a' : '#7d6c48', '#5a5038', 1.25);
+    if (G.aimT === q && live){ ctx.strokeStyle = 'rgba(240,220,160,.8)'; ctx.lineWidth = 1.5; const r = 13 + Math.sin(G.time * 8) * 1.5;
+      ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 7); ctx.moveTo(q.x - r - 4, q.y); ctx.lineTo(q.x - r + 4, q.y); ctx.moveTo(q.x + r - 4, q.y); ctx.lineTo(q.x + r + 4, q.y); ctx.stroke(); } }
+  // spelaren
+  if (p && (state === 'raid' || state === 'paused' || state === 'over')){
+    ctx.strokeStyle = 'rgba(232,226,208,.4)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, 7); ctx.stroke();
+    drawSoldier(p.x, p.y, p.ang, p.walk, G.hurtT > 0 ? '#c0603a' : '#767b68', '#5a5e50', 1.3);
+    if (p.prog > 0){ ctx.strokeStyle = '#d9a441'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(p.x, p.y, 18, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p.prog); ctx.stroke(); }
+  }
+  // granatvarningar
+  for (const s of G.shells){ const k = 1 - s.t / s.max;
+    ctx.strokeStyle = `rgba(220,70,50,${.35 + .5 * k})`; ctx.lineWidth = 2; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.arc(s.x, s.y, s.R, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = `rgba(220,70,50,${.12 + .2 * k})`; ctx.beginPath(); ctx.arc(s.x, s.y, s.R * k, 0, 7); ctx.fill(); }
+  for (const pt of G.parts){ ctx.globalAlpha = clamp(pt.t / pt.max, 0, 1); ctx.fillStyle = pt.c; ctx.fillRect(pt.x - pt.s / 2, pt.y - pt.s / 2, pt.s, pt.s); }
+  ctx.globalAlpha = 1;
+}
+function drawLandScene(){
+  const g = G.gl;
+  // gryningshimmel – solen går upp i öster bakom glidflygplanen
+  const sky = ctx.createLinearGradient(0, -200, 0, 400);
+  sky.addColorStop(0, '#141a28'); sky.addColorStop(.55, '#3b3f52'); sky.addColorStop(.85, '#b9805a'); sky.addColorStop(1, '#d9a46a');
+  ctx.fillStyle = sky; ctx.fillRect(-600, -600, W + 1200, H + 1200);
+  const sun = ctx.createRadialGradient(-40, 380, 10, -40, 380, 360); sun.addColorStop(0, 'rgba(255,200,130,.55)'); sun.addColorStop(1, 'rgba(255,200,130,0)');
+  ctx.fillStyle = sun; ctx.fillRect(-600, -200, 1200, 800);
+  ctx.fillStyle = 'rgba(255,240,220,.6)'; for (let i = 0; i < 30; i++){ const sx = (i * 137) % (W + 200) - 100, sy = (i * 71) % 150 - 60; ctx.fillRect(sx, sy, 1.5, 1.5); }
+  // avlägsna höjder
+  ctx.fillStyle = '#2b2f2e'; ctx.beginPath(); ctx.moveTo(-600, 400);
+  for (let x = -600; x <= W + 600; x += 60) ctx.lineTo(x, 360 - Math.sin(x * .011) * 18 - Math.sin(x * .03) * 8); ctx.lineTo(W + 600, 600); ctx.lineTo(-600, 600); ctx.fill();
+  // marken: åkrar, kullen med fortet, kanalskärningen
+  ctx.fillStyle = '#1f251a'; ctx.beginPath(); ctx.moveTo(-600, 396); ctx.lineTo(300, 396); ctx.lineTo(345, 330); ctx.lineTo(722, 330); ctx.lineTo(735, 340); ctx.lineTo(740, 432); ctx.lineTo(W + 600, 432); ctx.lineTo(W + 600, 700); ctx.lineTo(-600, 700); ctx.fill();
+  ctx.fillStyle = '#4e5a39'; ctx.fillRect(345, 330, 377, 5);
+  ctx.fillStyle = '#2f4250'; ctx.fillRect(740, 432, W + 600, 300);
+  ctx.fillStyle = '#4a4740'; ctx.beginPath(); ctx.moveTo(722, 330); ctx.lineTo(735, 340); ctx.lineTo(740, 432); ctx.lineTo(726, 432); ctx.fill();
+  // kupoler som silhuetter på taket
+  ctx.fillStyle = '#2a2e26'; for (const x of [395, 470, 540, 610, 680]){ ctx.beginPath(); ctx.arc(x, 331, x === 470 ? 10 : 7, Math.PI, 0); ctx.fill(); }
+  // bro över kanalen (Kanne) i fjärran
+  ctx.strokeStyle = '#3d3c38'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(760, 420); ctx.lineTo(W + 40, 420); ctx.stroke();
+  for (let x = 770; x < W + 40; x += 18){ ctx.beginPath(); ctx.moveTo(x, 420); ctx.lineTo(x + 9, 408); ctx.lineTo(x + 18, 420); ctx.stroke(); }
+  // landningszon
+  ctx.strokeStyle = '#d8d0b4'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(G.lz, 330); ctx.lineTo(G.lz, 300); ctx.stroke();
+  ctx.fillStyle = '#d9a441'; ctx.beginPath(); ctx.moveTo(G.lz, 300); ctx.lineTo(G.lz + 18, 306); ctx.lineTo(G.lz, 312); ctx.fill();
+  ctx.fillStyle = 'rgba(217,164,65,.25)'; ctx.fillRect(G.lz - 40, 326, 80, 4);
+  ctx.fillStyle = '#e8e2d0'; ctx.font = '700 11px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('LZ', G.lz + 6, 294);
+  // luftvärn
+  for (const a of G.aa){
+    ctx.fillStyle = '#1a1c18'; ctx.beginPath(); ctx.arc(a.x, 330, 6, Math.PI, 0); ctx.fill();
+    if (a.on){ ctx.strokeStyle = 'rgba(255,200,110,.7)'; ctx.lineWidth = 1.6; ctx.setLineDash([10, 14]); ctx.lineDashOffset = -G.landT * 300;
+      ctx.beginPath(); ctx.moveTo(a.x, 326); ctx.lineTo(a.x + Math.cos(a.ang) * 440, 326 + Math.sin(a.ang) * 440); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+      if (Math.random() < .5){ ctx.fillStyle = '#ffd27a'; ctx.beginPath(); ctx.arc(a.x, 324, 3, 0, 7); ctx.fill(); } }
+  }
+  // bogserplanet lämnar
+  if (G.landT < 3){ const tx = 40 + G.landT * 160, ty = 30 - G.landT * 18;
+    ctx.fillStyle = '#171a1f'; ctx.beginPath(); ctx.ellipse(tx, ty, 22, 4, -.1, 0, 7); ctx.fill(); ctx.fillRect(tx - 6, ty - 1, 6, -10); ctx.fillRect(tx - 6, ty, 6, 10);
+    if (G.landT < 1){ ctx.strokeStyle = 'rgba(20,20,20,.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(tx - 20, ty); ctx.lineTo(g.x + 20, g.y); ctx.stroke(); } }
+  // glidflygplanet
+  ctx.save(); ctx.translate(g.x, g.y); ctx.rotate(g.pitch * .8);
+  ctx.fillStyle = g.hit > 0 ? '#9c5a3a' : '#22261e';
+  ctx.beginPath(); ctx.moveTo(26, 0); ctx.quadraticCurveTo(18, -6, 0, -5); ctx.lineTo(-26, -2); ctx.lineTo(-30, -9); ctx.lineTo(-33, -9); ctx.lineTo(-31, 2); ctx.lineTo(0, 4); ctx.quadraticCurveTo(18, 5, 26, 0); ctx.fill();
+  ctx.fillRect(-10, -8, 26, 3);
+  ctx.fillStyle = '#7c8a96'; ctx.fillRect(14, -4, 7, 3);
+  ctx.restore();
+  // tecken för höjd: skugga på marken
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(g.x, groundY(g.x) + 1, 20 - clamp((groundY(g.x) - g.y) / 20, 0, 14), 2, 0, 0, 7); ctx.fill();
+  for (const pt of G.parts){ ctx.globalAlpha = clamp(pt.t / pt.max, 0, 1); ctx.fillStyle = pt.c; ctx.fillRect(pt.x - pt.s / 2, pt.y - pt.s / 2, pt.s, pt.s); }
+  ctx.globalAlpha = 1;
+}
+function bar(x, y, w, h, v, col, label){
+  ctx.fillStyle = '#000a'; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = col; ctx.fillRect(x + 1, y + 1, (w - 2) * clamp(v / 100, 0, 1), h - 2);
+  ctx.fillStyle = '#e8e2d0'; ctx.font = '9px "Special Elite", monospace'; ctx.textAlign = 'left'; ctx.fillText(label, x, y - 3);
+}
+function drawHud(){
+  const sa = 8, ph = state === 'paused' ? pausedFrom : state;
+  ctx.textAlign = 'left'; ctx.fillStyle = '#a7a196'; ctx.font = '500 11px Oswald, sans-serif';
+  ctx.fillText(ph === 'land' ? 'INFLYGNING · NIVÅ ' + G.level : 'NIVÅ ' + G.level, 14, 18 + sa);
+  ctx.fillStyle = '#e8e2d0'; ctx.font = '700 26px Oswald, sans-serif'; ctx.fillText(G.score, 14, 44 + sa);
+  if (ph === 'raid'){
+    ctx.font = '700 15px Oswald, sans-serif'; ctx.fillStyle = G.left < 30 ? (Math.sin(G.time * 8) > 0 ? '#e06a4a' : '#e8e2d0') : '#e8e2d0';
+    ctx.fillText('⏱ ' + fmtTime(G.left), 14, 64 + sa);
+  }
+  bar(14, 82 + sa, 110, 8, G.hp, G.hp < 30 ? '#c4553a' : '#8aa04e', 'HÄLSA');
+  if (ph === 'raid'){
+    ctx.fillStyle = '#e8e2d0'; ctx.font = '9px "Special Elite", monospace'; ctx.fillText('LADDNINGAR', 14, 104 + sa);
+    for (let i = 0; i < 3; i++){ ctx.fillStyle = i < G.p.charges ? '#d9a441' : '#0008'; ctx.fillRect(14 + i * 20, 109 + sa, 16, 10); ctx.strokeStyle = '#d9a44188'; ctx.lineWidth = 1; ctx.strokeRect(14.5 + i * 20, 109.5 + sa, 15, 9); }
+    const real = G.tg.filter(t => t.t !== 'dummy'), mt = 'MÅL ' + real.filter(t => t.dead).length + ' / ' + real.length;
+    ctx.textAlign = 'center'; ctx.font = '700 14px Oswald, sans-serif'; ctx.fillStyle = '#000a'; ctx.fillText(mt, hudW / 2 + 1, 24 + sa + 1);
+    ctx.fillStyle = '#e8e2d0'; ctx.fillText(mt, hudW / 2, 24 + sa);
+  }
+  // meddelanden
+  let ty = hudH * .3;
+  for (const t of G.toasts){ ctx.globalAlpha = clamp(t.t / .5, 0, 1); ctx.textAlign = 'center'; ctx.font = '700 17px Oswald, sans-serif';
+    ctx.fillStyle = '#000b'; ctx.fillText(t.txt, hudW / 2 + 1, ty + 1); ctx.fillStyle = t.col; ctx.fillText(t.txt, hudW / 2, ty); ty += 24; }
+  ctx.globalAlpha = 1;
+  if (ph === 'land'){
+    if (state === 'paused') return;
+    const pulse = .6 + .4 * Math.sin(G.time * 5);
+    ctx.textAlign = 'center'; ctx.font = '700 16px Oswald, sans-serif'; ctx.fillStyle = `rgba(0,0,0,.6)`;
+    const txt = input.dive || input.keys.Space || input.keys.ArrowDown ? 'DYKER…  släpp för att glida' : 'HÅLL FINGRET MOT SKÄRMEN FÖR ATT DYKA';
+    ctx.fillText(txt, hudW / 2 + 1, hudH - 28 + 1); ctx.fillStyle = `rgba(231,201,106,${pulse})`; ctx.fillText(txt, hudW / 2, hudH - 28);
+    return;
+  }
+  if (state !== 'raid') return;
+  // joystick
+  const jx = joy.active ? joy.ox : joyHome.x, jy = joy.active ? joy.oy : joyHome.y, on = joy.active;
+  ctx.fillStyle = on ? 'rgba(0,0,0,.45)' : 'rgba(0,0,0,.32)'; ctx.beginPath(); ctx.arc(jx, jy, JR, 0, 7); ctx.fill();
+  ctx.strokeStyle = on ? 'rgba(232,226,208,.7)' : 'rgba(232,226,208,.45)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(jx, jy, JR, 0, 7); ctx.stroke();
+  ctx.fillStyle = on ? 'rgba(232,226,208,.6)' : 'rgba(232,226,208,.45)';
+  for (let i = 0; i < 4; i++){ const a = i * Math.PI / 2; ctx.save(); ctx.translate(jx + Math.cos(a) * (JR - 11), jy + Math.sin(a) * (JR - 11)); ctx.rotate(a);
+    ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(-3, -6); ctx.lineTo(-3, 6); ctx.closePath(); ctx.fill(); ctx.restore(); }
+  const kx = jx + input.jx * JR, ky = jy + input.jy * JR;
+  ctx.fillStyle = on ? 'rgba(217,164,65,.75)' : 'rgba(232,226,208,.35)'; ctx.beginPath(); ctx.arc(kx, ky, 22, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(232,226,208,.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(kx, ky, 22, 0, 7); ctx.stroke();
+  if (!G.moved){ const pulse = .5 + .5 * Math.sin(G.time * 5);
+    ctx.strokeStyle = `rgba(217,164,65,${.35 + .5 * pulse})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(jx, jy, JR + 6 + pulse * 6, 0, 7); ctx.stroke();
+    ctx.textAlign = 'left'; ctx.font = '700 15px Oswald, sans-serif'; ctx.fillStyle = '#000b'; ctx.fillText('DRA HÄR FÖR ATT GÅ', jx - JR + 1, jy - JR - 15);
+    ctx.fillStyle = '#e7c96a'; ctx.fillText('DRA HÄR FÖR ATT GÅ', jx - JR, jy - JR - 16); }
+  // laddningsknapp
+  const cb = chgBtn, ready = G.near && G.p.charges > 0;
+  ctx.fillStyle = input.charge && ready ? 'rgba(217,164,65,.55)' : ready ? 'rgba(217,164,65,.28)' : 'rgba(0,0,0,.4)';
+  ctx.beginPath(); ctx.arc(cb.x, cb.y, cb.r, 0, 7); ctx.fill();
+  ctx.strokeStyle = ready ? `rgba(217,164,65,${.6 + .4 * Math.sin(G.time * 6)})` : 'rgba(232,226,208,.3)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cb.x, cb.y, cb.r - 3, 0, 7); ctx.stroke();
+  if (G.p.prog > 0){ ctx.strokeStyle = '#f4e3c0'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(cb.x, cb.y, cb.r - 3, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * G.p.prog); ctx.stroke(); }
+  ctx.textAlign = 'center'; ctx.fillStyle = ready ? '#f4e3c0' : 'rgba(232,226,208,.55)'; ctx.font = '700 12px Oswald, sans-serif'; ctx.fillText('LADDNING', cb.x, cb.y + 1);
+  ctx.font = '10px "Special Elite", monospace'; ctx.fillText(G.p.charges ? (G.near ? 'håll inne' : 'gå till mål') : 'hämta fler', cb.x, cb.y + 15);
+  // eldknapp
+  const fb = fireBtn;
+  ctx.fillStyle = input.fire ? 'rgba(181,69,47,.6)' : 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.arc(fb.x, fb.y, fb.r, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(217,164,65,.8)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(fb.x, fb.y, fb.r - 3, 0, 7); ctx.stroke();
+  ctx.fillStyle = '#e8e2d0'; ctx.font = '700 15px Oswald, sans-serif'; ctx.fillText('ELD', fb.x, fb.y + 5);
+}
+function render(){
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#101214'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+  if (!G) return;
+  const sx = (Math.random() - .5) * G.shake, sy = (Math.random() - .5) * G.shake;
+  ctx.setTransform(sc, 0, 0, sc, ox + sx * sc, oy + sy * sc);
+  if (state === 'land' || (state === 'paused' && pausedFrom === 'land')) drawLandScene(); else drawRaid();
+  ctx.setTransform(hs, 0, 0, hs, 0, 0);
+  // gryningston och skada
+  const vg = ctx.createRadialGradient(hudW / 2, hudH / 2, Math.max(hudW, hudH) * .3, hudW / 2, hudH / 2, Math.max(hudW, hudH) * .75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,8,6,.5)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, hudW, hudH);
+  if (G.flash > 0 || (G.hp < 30 && (state === 'raid' || state === 'land'))){ ctx.fillStyle = `rgba(160,30,20,${Math.max(G.flash * .5, G.hp < 30 ? .08 + .06 * Math.sin(G.time * 6) : 0)})`; ctx.fillRect(0, 0, hudW, hudH); }
+  if (state === 'land' || state === 'raid' || state === 'paused') drawHud();
+}
+
+/* ============ Loop ============ */
+const portrait = () => innerHeight > innerWidth * 1.05;
+function loop(t){
+  const dt = Math.min(.05, (t - lastT) / 1000 || 0); lastT = t;
+  const playing = state === 'land' || state === 'raid';
+  const turn = playing && portrait(); $('turn').hidden = !turn;
+  if (playing && !turn){ const inp = readInput(); if (state === 'land') updLand(dt, inp); else updRaid(dt, inp); }
+  else if (G && state !== 'paused') updFx(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+/* ============ Skärmar & topplista ============ */
+const screens = ['startScreen', 'briefScreen', 'levelScreen', 'overScreen', 'hsScreen', 'pauseScreen'];
+function show(id){ for (const s of screens) $(s).classList.toggle('hidden', s !== id); $('hudBtns').style.display = id ? 'none' : 'flex'; }
+let lastTs = null;
+function renderTable(el, list, meTs){
+  if (!list || !list.length){ el.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#a7a196">Ingen har kommit med på listan ännu. Bli först!</td></tr>'; return; }
+  el.innerHTML = list.map((s, i) => `<tr class="${s.ts === meTs ? 'me' : ''}"><td>${i + 1}.</td><td>${esc(s.name)}</td><td>${s.score}</td></tr>`).join('');
+}
+async function loadHs(){
+  $('hsStatus').textContent = 'Hämtar…'; $('hsTable').innerHTML = '';
+  try { const j = await VF.load(GAME); $('hsStatus').textContent = VF.pending() ? 'Dina sparade resultat skickas när du har täckning.' : ''; renderTable($('hsTable'), j.scores, lastTs); }
+  catch(e){ $('hsStatus').textContent = 'Ingen täckning just nu – topplistan visas när du är uppkopplad.'; }
+}
+async function submit(){
+  const name = ($('nameInput').value || '').trim().slice(0, 16) || 'Okänd soldat';
+  const st = $('submitStatus'); st.textContent = 'Rapporterar till högkvarteret…'; $('overTable').innerHTML = '';
+  const j = await VF.submit(GAME, { name, score: G.score, level: G.level, targets: G.destroyedTotal || 0, kills: G.kills, duration: Math.round(G.time) });
+  if (j.ok){ lastTs = j.ts; st.textContent = j.rank ? `Du är på plats ${j.rank}!` : 'Poängen är sparad.'; renderTable($('overTable'), j.scores.slice(0, 10), j.ts); }
+  else if (j.queued) st.textContent = 'Ingen täckning – poängen skickas automatiskt när du är uppkopplad igen.';
+  else st.textContent = 'Kunde inte spara till topplistan (' + j.error + ').';
+}
+function levelDone(){
+  const L = G.level, tb = Math.round(G.left * 4), lb = 300 * L, hb = Math.round(G.hp);
+  G.score += tb + lb + hb; G.destroyedTotal = (G.destroyedTotal || 0) + G.destroyed; G.destroyed = 0;
+  state = 'levelDone'; windStop();
+  $('lvlTitle').textContent = 'Nivå ' + L + ' klar';
+  $('lvlScore').textContent = G.score;
+  $('lvlRows').innerHTML = [['Nivåbonus', lb], ['Tid kvar (' + fmtTime(G.left) + ')', tb], ['Hälsa kvar', hb]].map(([a, b]) => `<tr><td>${a}</td><td>+${b}</td></tr>`).join('');
+  $('lvlFact').innerHTML = '<b>VISSTE DU?</b> ' + esc(STORY[(L - 1) % STORY.length]);
+  G.hp = Math.min(100, G.hp + 35);
+  show('levelScreen');
+}
+function gameOver(cause){
+  if (state === 'over') return;
+  windStop(); state = 'over'; G.shake = 0; resetInput();
+  if (cause !== 'quit') G.destroyedTotal = (G.destroyedTotal || 0) + G.destroyed, G.destroyed = 0;
+  VF.setBest(GAME, G.score);
+  $('overTitle').textContent = cause === 'time' ? 'Misslyckat' : cause === 'quit' ? 'Uppdraget avslutat' : 'Stupad';
+  $('cause').textContent = CAUSE[cause] || '';
+  $('finalScore').textContent = G.score;
+  $('stLvl').textContent = G.level; $('stTg').textContent = G.destroyedTotal || 0; $('stKills').textContent = G.kills;
+  const t = Math.round(G.time); $('stTime').textContent = Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+  const fx = FACTS[cause] && Math.random() < .65 ? FACTS[cause] : STORY;
+  $('fact').innerHTML = '<b>VISSTE DU?</b> ' + esc(pick(fx)); $('fact').hidden = false;
+  setTimeout(() => { show('overScreen'); submit(); }, cause === 'quit' ? 0 : 900);
+}
+function tryLandscape(){
+  if (!matchMedia('(pointer:coarse)').matches) return;
+  try { const el = document.documentElement, fs = el.requestFullscreen && !document.fullscreenElement ? el.requestFullscreen() : Promise.resolve();
+    Promise.resolve(fs).then(() => screen.orientation && screen.orientation.lock ? screen.orientation.lock('landscape') : null).catch(() => {}); } catch(e){}
+}
+function start(){
+  const n = $('nameInput').value.trim(); if (!n){ $('nameInput').focus(); $('nameInput').placeholder = 'Skriv ditt namn först'; return; }
+  lsSet('vf_name', n); audio(); tryLandscape(); newGame(); startLevel(1);
+}
+let pausedFrom = null;
+function togglePause(){
+  if (state === 'land' || state === 'raid'){ pausedFrom = state; state = 'paused'; windStop(); show('pauseScreen'); }
+  else if (state === 'paused'){ state = pausedFrom; pausedFrom = null; show(null); lastT = performance.now(); if (state === 'land') windStart(); }
+}
+$('nameInput').value = lsGet('vf_name') || lsGet('hf_name') || '';
+$('playBtn').onclick = start;
+$('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') start(); });
+$('goBtn').onclick = () => { audio(); lastT = performance.now(); beginLanding(); };
+$('nextBtn').onclick = () => startLevel(G.level + 1);
+$('stopBtn').onclick = () => gameOver('quit');
+$('againBtn').onclick = () => { newGame(); startLevel(1); };
+$('menuBtn').onclick = () => { state = 'menu'; show('startScreen'); };
+$('hsBtn').onclick = () => { show('hsScreen'); loadHs(); };
+$('hsBack').onclick = () => show('startScreen');
+$('pauseBtn').onclick = togglePause;
+$('resumeBtn').onclick = togglePause;
+$('quitBtn').onclick = () => { state = 'menu'; pausedFrom = null; windStop(); show('startScreen'); };
+const updMute = () => { $('muteBtn').style.opacity = muted ? .4 : 1; };
+$('muteBtn').onclick = () => { muted = !muted; lsSet('ee_muted', muted ? '1' : '0'); if (muted) windStop(); updMute(); }; updMute();
+document.addEventListener('visibilitychange', () => { if (document.hidden && (state === 'raid' || state === 'land')) togglePause(); });
+addEventListener('resize', resize); resize();
+// bakgrund i menyn: kartan över taket
+newGame(); buildLevel(1);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
