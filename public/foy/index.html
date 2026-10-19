@@ -92,7 +92,7 @@ tr.me td{background:#d6b25e22}
    <div class="col">
     <a class="back" href="/">← Alla spel</a>
     <h1><small>Anfallet mot</small>Foy</h1>
-    <p class="brief">13 januari 1945, Ardennerna. Ditt kompani ligger i skogen Bois Jacques. Framför er: ett öppet snöfält och byn Foy, full av tyska ställningar. Led dina tre grupper över fältet – den som springer utan understöd kommer inte fram.</p>
+    <p class="brief">13 januari 1945, Ardennerna. Ditt kompani ligger i skogen Bois Jacques. Framför er: ett öppet snöfält och byn Foy. Ingen vet säkert var tyskarna sitter. Led dina tre grupper över fältet – och vidare mot Noville och Rachamps.</p>
     <input id="nameInput" maxlength="16" placeholder="Ditt namn" autocomplete="nickname">
     <button class="btn" id="playBtn">Anfall</button>
     <button class="btn ghost" id="hsBtn">Topplista</button>
@@ -100,11 +100,12 @@ tr.me td{background:#d6b25e22}
    </div>
    <div class="col">
     <ul class="tips">
-      <li><b>Tryck på en grupp</b> och sedan på en <b>grön ruta</b> för att förflytta, eller på en <b>fiende</b> för att skjuta. Tryck på gruppen igen så tar den skydd.</li>
-      <li><b>Eld håller nere fienden.</b> En nedhållen ställning kan inte skjuta tillbaka samma drag.</li>
-      <li><b>Storma</b> en ställning genom att gå in i den från rutan bredvid – men bara om en annan grupp håller ner den samma drag.</li>
-      <li><b>Kratrar, diken och häckar</b> ger skydd. Det öppna snöfältet gör det inte.</li>
-      <li><b>RÖK</b> skymmer sikten och <b>ARTILLERI</b> slår mot en ställning. Tryck på <b>KLAR</b> när alla har fått order.</li>
+      <li><b>Tryck på en grupp</b>, sedan på en <b>grön ruta</b> för att gå eller på en <b>röd ring</b> för att skjuta. Tryck på gruppen igen så tar den <b>skydd och spanar</b>.</li>
+      <li><b>Eld håller nere fienden.</b> Storma en ställning från rutan bredvid – det lyckas om en annan grupp håller ner den samma drag, eller om två grupper stormar samtidigt.</li>
+      <li><b>Husen med ?</b> kan dölja tyskar. De avslöjas när de skjuter, när ni kommer nära eller när en grupp spanar.</li>
+      <li><b>Ligg inte still.</b> Tyska granatkastare skjuter in sig på grupper som ligger kvar på samma ställe.</li>
+      <li><b>Pansarvagnar</b> kan bara slås ut med <b>bazookan</b> (2:a gruppen) eller artilleri.</li>
+      <li><b>RÖK</b> skymmer sikten. Tryck på <b>KLAR</b> när alla har order.</li>
     </ul>
    </div>
   </div>
@@ -115,7 +116,7 @@ tr.me td{background:#d6b25e22}
    <div class="col">
     <div class="sub">Mitt på snöfältet</div>
     <h2>Anfallet har stannat</h2>
-    <p>Kompanichefen har kastat sig ner i snön och ger inga order. Grupperna ligger kvar ute på det öppna fältet och väntar. Bataljonschefen ser det från skogsbrynet.</p>
+    <p>Kompanichefen har kastat sig ner i snön och ger inga order. Grupperna ligger kvar ute på det öppna fältet. Bataljonschefen ser det från skogsbrynet.</p>
    </div>
    <div class="col">
     <button class="btn" id="decideSwap">Byt chef – en ny tar befälet</button>
@@ -133,7 +134,7 @@ tr.me td{background:#d6b25e22}
    </div>
    <div class="col">
     <p class="fact" id="lvlFact"></p>
-    <button class="btn" id="nextBtn">Nästa anfall</button>
+    <button class="btn" id="nextBtn">Vidare</button>
     <button class="btn ghost" id="stopBtn">Avsluta och spara</button>
    </div>
   </div>
@@ -222,73 +223,123 @@ let lastRattle = 0;
 function sfxRattle(){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime; if (t - lastRattle < .07) return; lastRattle = t;
   const s = a.createBufferSource(); s.buffer = noiseBuf(.05); const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1700;
   const g = a.createGain(); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .05); s.connect(f).connect(g).connect(a.destination); s.start(); }
+function sfxWhistle(){ if (muted) return; const a = audio(); if (!a) return; const o = a.createOscillator(), g = a.createGain(), t = a.currentTime; o.type = 'sine';
+  o.frequency.setValueAtTime(1500, t); o.frequency.exponentialRampToValueAtTime(500, t + .7);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.05, t + .15); g.gain.exponentialRampToValueAtTime(.0001, t + .75); o.connect(g).connect(a.destination); o.start(); o.stop(t + .8); }
+function sfxTank(){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime, o = a.createOscillator(), g = a.createGain(); o.type = 'sawtooth'; o.frequency.value = 48;
+  const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 220; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.08, t + .3); g.gain.exponentialRampToValueAtTime(.0001, t + 1.6);
+  o.connect(f).connect(g).connect(a.destination); o.start(); o.stop(t + 1.7); }
+function sfxRadio(){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime, s = a.createBufferSource(); s.buffer = noiseBuf(.25);
+  const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2200; const g = a.createGain(); g.gain.setValueAtTime(.05, t); g.gain.exponentialRampToValueAtTime(.001, t + .25);
+  s.connect(f).connect(g).connect(a.destination); s.start(); }
 function beep(freq, len, vol, type){ if (muted) return; const a = audio(); if (!a) return; const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.value = freq;
   g.gain.setValueAtTime(vol || .06, a.currentTime); g.gain.exponentialRampToValueAtTime(.001, a.currentTime + len); o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + len + .02); }
 
-/* ============ Terräng ============ */
+/* ============ Kampanjen ============ */
 const COVER = { forest: .14, edge: .2, open: .55, crater: .3, ditch: .28, hedge: .32, house: .12, church: .12, road: .55 };
 const TNAME = { forest: 'skog', edge: 'skogsbryn', open: 'öppen snö', crater: 'krater', ditch: 'dike', hedge: 'häck', house: 'hus', church: 'kyrka', road: 'väg' };
-const KIND = { mg: { n: 'Kulspruta', str: 3, range: 8, shots: 2, pts: 150 }, rifle: { n: 'Skyttegrupp', str: 3, range: 6, shots: 1, pts: 100 }, sniper: { n: 'Prickskytt', str: 1, range: 13, shots: 1, pts: 200 } };
-function buildMap(L){
-  const m = [];
-  for (let c = 0; c < COLS; c++){ m.push([]); for (let r = 0; r < ROWS; r++) m[c].push({ t: c === 0 ? 'forest' : 'open', seed: Math.random() }); }
-  for (let r = 0; r < ROWS; r++) if (Math.random() < .6) m[1][r].t = 'edge';
-  // dike tvärs över fältet
-  const dc = 4 + Math.floor(Math.random() * 2), dr = Math.floor(rand(0, 3)); for (let r = dr; r < dr + 3; r++) m[dc][r].t = 'ditch';
-  // kratrar
-  for (let i = 0; i < 7 - Math.min(3, L - 1); i++){ const c = 2 + Math.floor(rand(0, 6)), r = Math.floor(rand(0, ROWS)); if (m[c][r].t === 'open') m[c][r].t = 'crater'; }
-  // trädgårdar och häckar framför byn
-  for (let r = 0; r < ROWS; r++) if (Math.random() < .35) m[8][r].t = 'hedge';
-  // byn: väg N30, hus och kyrka
-  for (let r = 0; r < ROWS; r++) m[10][r].t = 'road';
-  const houses = [[9, 0], [9, 2], [9, 4], [9, 5], [11, 1], [11, 4], [11, 5], [10, 3]];
-  houses.forEach(([c, r]) => m[c][r].t = 'house');
-  m[11][2].t = 'church';
-  return m;
-}
-function buildEnemies(L){
-  const spots = [[9, 2, 'mg'], [9, 4, 'rifle'], [9, 0, 'rifle'], [10, 3, 'mg'], [11, 1, 'rifle'], [9, 5, 'rifle'], [11, 4, 'mg'], [11, 5, 'rifle']];
-  const n = Math.min(spots.length, 1 + L);
-  const list = spots.slice(0, n).map(([c, r, k], i) => ({ id: i, c, r, kind: k, str: KIND[k].str, sup: 0, supNow: false, alive: true, hitT: 0 }));
-  list.push({ id: 99, c: 11, r: 2, kind: 'sniper', str: 1, sup: 0, supNow: false, alive: true, hitT: 0 });
-  return list;
-}
-
-/* ============ Historien ============ */
+const KIND = {
+  mg:     { n: 'Kulspruta',    str: 3, range: 8,  shots: 2, pts: 150, label: 'KSP' },
+  rifle:  { n: 'Skyttegrupp',  str: 3, range: 6,  shots: 1, pts: 100, label: 'GRP' },
+  sniper: { n: 'Prickskytt',   str: 1, range: 13, shots: 1, pts: 200, label: '⌖' },
+  tank:   { n: 'Pansarvagn',   str: 1, range: 7,  shots: 1, pts: 300, label: 'PV' },
+  patrol: { n: 'Motanfall',    str: 2, range: 5,  shots: 1, pts: 120, label: 'MOT' }
+};
+const MISSIONS = [
+  { name: 'Foy', date: '13 januari 1945', left: 'BOIS JACQUES', turns: 14, vis: 99, tank: 0, counterFrom: 5, runner: true,
+    en: [['mg', 9, 2, true], ['rifle', 9, 4], ['rifle', 11, 1], ['sniper', 11, 2]],
+    intro: ['Bataljonen: Easy, anfall mot Foy över fältet. Byn är full av tyskar.', 'Underrättelser: en kulspruta vid husen framför kyrkan. Resten vet vi inte.'],
+    done: 'Foy är taget den 13 januari 1945.',
+    fact: 'Foy ligger några kilometer norr om Bastogne längs vägen mot Noville. Byn anfölls den 13 januari 1945 av fallskärmsjägare ur 101:a luftburna divisionen – över ett öppet snöfält från skogen Bois Jacques.' },
+  { name: 'Noville', date: '15 januari 1945', left: 'FOY', turns: 16, vis: 99, tank: 3, counterFrom: 4,
+    en: [['mg', 9, 0, true], ['mg', 10, 3], ['rifle', 9, 4], ['rifle', 11, 4], ['sniper', 11, 2]],
+    intro: ['Bataljonen: Vidare mot Noville. Tyska pansarvagnar har setts i byn.', 'Håll bazookan redo – 2:a gruppen.'],
+    done: 'Noville är taget den 15 januari 1945.',
+    fact: 'I december 1944 försvarade amerikanska fallskärmsjägare och pansar Noville i två dygn innan de fick dra sig tillbaka mot Bastogne. Den 15 januari 1945 anföll de byn igen – nu från Foy.' },
+  { name: 'Rachamps', date: '16 januari 1945', left: 'SKOGEN', turns: 16, vis: 5, tank: 5, counterFrom: 3,
+    en: [['mg', 9, 2, true], ['rifle', 9, 5], ['rifle', 11, 1], ['mg', 11, 4], ['sniper', 11, 2]],
+    intro: ['Bataljonen: Rachamps. Snöstorm – ni ser bara några rutor framåt.', 'Spana innan ni springer.'],
+    done: 'Rachamps är taget den 16 januari 1945.',
+    fact: 'Rachamps blev en av Easy Companys sista strider i Ardennerna. Kort därefter drogs kompaniet ur linjen efter en månad i snö och kyla.' }
+];
 const FACTS = [
-  'Foy ligger några kilometer norr om Bastogne längs vägen mot Noville. Byn anfölls den 13 januari 1945 av amerikanska fallskärmsjägare ur 101:a luftburna divisionen.',
-  'Anfallet mot Foy gick över ett öppet snöfält från skogen Bois Jacques. Den som stannade ute på fältet var ett lätt mål.',
-  'Mitt under anfallet byttes kompanichefen för Easy Company ut. Löjtnant Ronald Speirs sprang fram över fältet, tog befälet och fick fart på anfallet igen.',
-  'Speirs sprang enligt berättelserna rakt igenom de tyska linjerna för att få kontakt med kompaniet på andra sidan byn – och sedan tillbaka.',
+  'Mitt under anfallet mot Foy byttes kompanichefen för Easy Company ut. Löjtnant Ronald Speirs sprang fram över fältet, tog befälet och fick fart på anfallet igen.',
+  'Speirs sprang enligt berättelserna rakt igenom byn för att få kontakt med I-kompaniet på andra sidan – och sedan tillbaka.',
   'En tysk prickskytt i Foy sköt flera amerikaner innan han själv träffades av Darrell "Shifty" Powers, en av kompaniets bästa skyttar.',
+  'Tyska granatkastare skjöt in sig på platser där soldaterna låg stilla. Den som blev liggande för länge på samma ställe riskerade att träffas.',
+  'Bazookan var infanteriets vapen mot stridsvagnar. Den måste användas på nära håll och skytten måste ofta visa sig för att få skjuta.',
   'Vintern 1944–45 var ovanligt kall. Många soldater i Ardennerna drabbades av förfrysningar och kylskador.',
-  'Striderna kring Foy var en del av Ardenneroffensiven, Tysklands sista stora offensiv i väst, som inleddes den 16 december 1944.',
+  'Striderna kring Bastogne var en del av Ardenneroffensiven, Tysklands sista stora offensiv i väst, som inleddes den 16 december 1944.',
   'Eld och rörelse: en del av förbandet håller fienden nere med eld medan en annan del förflyttar sig. Det är grunden för allt anfall – då som nu.',
   'Striderna i Foy skildras i tv-serien Band of Brothers, som bygger på Easy Companys väg från Normandie till krigsslutet.'
 ];
 const SWAP_FACT = 'Det var just så det gick till i Foy: bataljonschefen Dick Winters skickade löjtnant Ronald Speirs att ta över Easy Company mitt i anfallet.';
+const NAMES = ['Kowalski', 'Novak', 'Brennan', 'Hale', 'Duffy', 'Moretti', 'Lindqvist', 'Olsen', 'Parker', 'Reyes', 'Sullivan', 'Weiss', 'Ward', 'Coleman', 'Foster',
+  'Garcia', 'Hughes', 'Jensen', 'Kelly', 'Larsen', 'Miller', 'Nash', 'Ortiz', 'Price', 'Quinn', 'Russo', 'Shaw', 'Turner', 'Vance', 'Young', 'Becker', 'Doyle', 'Ellis', 'Fischer', 'Grant', 'Holm'];
+const OFF = [[-13, -9], [12, -11], [-2, 5], [14, 9], [-15, 13]];
+
+function missionFor(m){
+  const base = MISSIONS[(m - 1) % MISSIONS.length], extra = Math.floor((m - 1) / MISSIONS.length);
+  const ms = Object.assign({}, base, { en: base.en.slice() });
+  if (extra){ ms.name = 'Ardennerna'; ms.date = 'januari 1945'; ms.runner = false; ms.counterFrom = Math.max(2, base.counterFrom - extra);
+    const free = [[9, 0], [9, 2], [9, 4], [9, 5], [11, 1], [11, 4], [11, 5], [10, 3]].filter(([c, r]) => !ms.en.some(e => e[1] === c && e[2] === r));
+    for (let i = 0; i < Math.min(extra, free.length); i++) ms.en.push([i % 2 ? 'mg' : 'rifle', free[i][0], free[i][1]]);
+    ms.intro = ['Bataljonen: Nytt anfall. Tyskarna har förstärkt byn.']; ms.done = 'Byn är tagen.'; }
+  return ms;
+}
+function buildMap(ms, L){
+  const m = [];
+  for (let c = 0; c < COLS; c++){ m.push([]); for (let r = 0; r < ROWS; r++) m[c].push({ t: c === 0 ? 'forest' : 'open', seed: Math.random(), cleared: false }); }
+  for (let r = 0; r < ROWS; r++) if (Math.random() < .6) m[1][r].t = 'edge';
+  const dc = 4 + Math.floor(Math.random() * 2), dr = Math.floor(rand(0, 3)); for (let r = dr; r < dr + 3; r++) m[dc][r].t = 'ditch';
+  for (let i = 0; i < 7 - Math.min(3, L - 1); i++){ const c = 2 + Math.floor(rand(0, 6)), r = Math.floor(rand(0, ROWS)); if (m[c][r].t === 'open') m[c][r].t = 'crater'; }
+  for (let r = 0; r < ROWS; r++) if (Math.random() < .35) m[8][r].t = 'hedge';
+  for (let r = 0; r < ROWS; r++) m[10][r].t = 'road';
+  [[9, 0], [9, 2], [9, 4], [9, 5], [11, 1], [11, 4], [11, 5], [10, 3]].forEach(([c, r]) => m[c][r].t = 'house');
+  m[11][2].t = 'church';
+  return m;
+}
+function newEnemy(kind, c, r, seen){ return { kind, c, r, str: KIND[kind].str, sup: 0, supNow: false, alive: true, seen: !!seen, flashT: 0, hitT: 0, x: cx(c), y: cy(r) }; }
+let nameIx = 0;
+function soldier(rank){ const n = NAMES[nameIx++ % NAMES.length]; return { name: n, rank, alive: true, x: 0, y: 0 }; }
 
 /* ============ Spelstatus ============ */
 let G = null, state = 'menu', lastT = 0;
-function newGame(){ G = { score: 0, level: 0, taken: 0, lost: 0, swapped: null, t: 0, parts: [], tracers: [], toasts: [], floats: [], shake: 0 }; }
+function newGame(){ nameIx = Math.floor(Math.random() * NAMES.length); G = { score: 0, level: 0, taken: 0, lost: 0, swapped: null, t: 0, parts: [], tracers: [], toasts: [], floats: [], radio: [], prints: [], fallen: [], shake: 0, grp: [] }; }
 function startLevel(L){
-  G.level = L; G.map = buildMap(L); G.en = buildEnemies(L); G.turn = 1; G.maxTurn = 14;
-  G.smokeLeft = 2 + (G.swapped === true ? 1 : 0); G.artLeft = L === 1 ? 1 : 1 + (L % 2); G.smoke = []; G.artTarget = null;
-  const rows = [1, 3, 4]; G.grp = [1, 2, 3].map((n, i) => ({ n, c: 0, r: rows[i], men: 5, max: 5, order: null, x: cx(0), y: cy(rows[i]), alive: true, hitT: 0 }));
-  G.sel = null; G.mode = null; G.noMove = false; G.levelLost = 0; G.levelTaken = 0; G.hint = L === 1 ? 0 : 9;
-  G.tracers = []; G.floats = [];
+  const ms = missionFor(L); G.ms = ms;
+  G.level = L; G.map = buildMap(ms, L); G.en = ms.en.map(([k, c, r, seen]) => newEnemy(k, c, r, seen));
+  G.turn = 1; G.maxTurn = ms.turns; G.vis = ms.vis;
+  G.smokeLeft = 2 + (G.swapped === true ? 1 : 0); G.artLeft = 1 + (L > 1 ? 1 : 0); G.smoke = []; G.artTarget = null; G.marks = []; G.pincer = 0;
+  const rows = [1, 3, 4], prev = G.grp;
+  G.grp = [1, 2, 3].map((n, i) => {
+    const old = prev && prev[i] ? prev[i].men.filter(s => s.alive) : [];
+    const men = old.length ? old.slice(0, 5) : [soldier('Sergeant')];
+    while (men.length < 5) men.push(soldier('Menige'));
+    const g = { n, c: 0, r: rows[i], men, order: null, x: cx(0), y: cy(rows[i]), alive: true, hitT: 0, still: 0, bazooka: n === 2 };
+    g.men.forEach((s, k) => { s.x = g.x + OFF[k][0]; s.y = g.y + OFF[k][1]; });
+    return g; });
+  G.runner = null; G.runnerDone = false; G.countered = false; G.counterCd = 0;
+  G.sel = null; G.mode = null; G.noMove = false; G.levelLost = 0; G.levelTaken = 0; G.hint = L === 1 ? 0 : 9; G.idleTurns = 0;
+  G.tracers = []; G.floats = []; G.prints = []; G.fallen = []; G.radio = [];
   state = 'plan'; show(null);
-  toast(L === 1 ? 'Foy, 13 januari 1945' : 'Anfall ' + L + ' – fler tyska ställningar', '#d6b25e', 3);
+  toast(ms.name + ', ' + ms.date, '#d6b25e', 3);
+  ms.intro.forEach((txt, i) => radio(txt, i * 4.2));
+  reveal();
 }
+const men = g => g.men.filter(s => s.alive).length;
 function toast(txt, col, t){ G.toasts.push({ txt, col: col || '#eef1f2', t: t || 2.2 }); if (G.toasts.length > 3) G.toasts.shift(); }
+function radio(txt, delay){ G.radio.push({ txt, t: 4.6, wait: delay || 0, beeped: false }); }
 function float(x, y, txt, col){ G.floats.push({ x, y, txt, col, t: 1.2 }); }
 function burst(x, y, n, cols, sp){ for (let i = 0; i < n; i++){ const a = rand(0, 6.28), v = rand(sp * .3, sp);
   G.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: rand(.4, 1), max: 1, c: cols[i % cols.length], s: rand(1.5, 3.5) }); } }
 const enemyAt = (c, r) => G.en.find(e => e.alive && e.c === c && e.r === r);
 const groupAt = (c, r, not) => G.grp.find(g => g.alive && g !== not && g.c === c && g.r === r);
 const smokeAt = (c, r) => G.smoke.some(s => s.c === c && s.r === r && s.turns > 0);
+const isBuilding = (c, r) => { const t = G.map[c][r].t; return t === 'house' || t === 'church'; };
 function los(c1, r1, c2, r2){
-  const tower = G.map[c1][r1].t === 'church' || G.map[c2][r2].t === 'church';   // kyrktornet ser över taken
+  if (cdist(c1, r1, c2, r2) > G.vis) return false;
+  const tower = G.map[c1][r1].t === 'church' || G.map[c2][r2].t === 'church';
   const n = Math.ceil(cdist(c1, r1, c2, r2) * 3);
   for (let i = 1; i < n; i++){ const k = i / n, c = Math.round(c1 + (c2 - c1) * k), r = Math.round(r1 + (r2 - r1) * k);
     if ((c === c1 && r === r1) || (c === c2 && r === r2)) continue;
@@ -296,20 +347,32 @@ function los(c1, r1, c2, r2){
     const t = G.map[c][r].t; if (t === 'forest' || (!tower && (t === 'house' || t === 'church'))) return false; }
   return true;
 }
+function reveal(range){
+  for (const e of G.en){ if (!e.alive || e.seen) continue;
+    for (const g of G.grp){ if (!g.alive) continue; const d = cdist(g.c, g.r, e.c, e.r);
+      if ((d <= 2.3 || (range && g.order && g.order.t === 'hold' && d <= range)) && los(g.c, g.r, e.c, e.r)){ e.seen = true; toast(KIND[e.kind].n + ' upptäckt!', '#e9cf8a', 1.8); break; } } }
+  // hus bredvid en grupp som är tomma räknas som avsökta
+  for (const g of G.grp){ if (!g.alive) continue; for (let c = g.c - 1; c <= g.c + 1; c++) for (let r = g.r - 1; r <= g.r + 1; r++){
+    if (c < 0 || r < 0 || c >= COLS || r >= ROWS) continue; if (isBuilding(c, r) && !enemyAt(c, r)) G.map[c][r].cleared = true; } }
+}
 function movesFor(g){
   const out = [];
   if (G.noMove) return out;
   for (let c = g.c - 2; c <= g.c + 2; c++) for (let r = g.r - 2; r <= g.r + 2; r++){
     if (c < 0 || r < 0 || c >= COLS || r >= ROWS || (c === g.c && r === g.r)) continue;
     if (groupAt(c, r, g)) continue;
-    const e = enemyAt(c, r), t = G.map[c][r].t;
-    if (e){ if (cheb(g.c, g.r, c, r) === 1) out.push({ c, r, assault: e }); continue; }
-    if (t === 'house' || t === 'church'){ if (cheb(g.c, g.r, c, r) > 1) continue; }
+    const e = enemyAt(c, r);
+    if (e){ if (e.seen && e.kind !== 'tank' && cheb(g.c, g.r, c, r) === 1) out.push({ c, r, assault: e }); if (e.seen || cheb(g.c, g.r, c, r) > 1) continue;
+      out.push({ c, r, blind: e }); continue; }   // okänd fiende: gruppen går rakt in i den
+    if (isBuilding(c, r) && cheb(g.c, g.r, c, r) > 1) continue;
     out.push({ c, r });
   }
   return out;
 }
-const fireTargets = g => G.en.filter(e => e.alive && cheb(g.c, g.r, e.c, e.r) >= 2 && cdist(g.c, g.r, e.c, e.r) <= 6.5 && los(g.c, g.r, e.c, e.r));
+function fireTargets(g){
+  return G.en.filter(e => e.alive && e.seen && cheb(g.c, g.r, e.c, e.r) >= (e.kind === 'tank' ? 1 : 2) && los(g.c, g.r, e.c, e.r) &&
+    (e.kind === 'tank' ? (g.bazooka && cdist(g.c, g.r, e.c, e.r) <= 3.6) : cdist(g.c, g.r, e.c, e.r) <= 6.5));
+}
 
 /* ============ Inmatning ============ */
 const BTN = { smoke: { x: 790, y: 50, w: 100, h: 64 }, art: { x: 790, y: 124, w: 100, h: 64 }, done: { x: 790, y: 300, w: 100, h: 100 } };
@@ -330,127 +393,228 @@ function tap(p){
     return;
   }
   if (G.mode === 'art'){
-    const e = enemyAt(c, r); if (!e){ toast('Tryck på en tysk ställning', '#a3adb5'); return; }
+    const e = enemyAt(c, r); if (!e || !e.seen){ toast(e ? 'Ni vet inte säkert att någon sitter där' : 'Tryck på en upptäckt tysk ställning', '#a3adb5'); return; }
     G.artTarget = e; G.artLeft--; G.mode = null; beep(250, .25, .06, 'triangle'); toast('Artilleri beställt mot ' + KIND[e.kind].n.toLowerCase(), '#e9cf8a'); return;
+  }
+  // löparen
+  if (G.runner && G.runner.alive && G.runner.c === c && G.runner.r === r){ G.sel = G.runner; beep(640, .05, .05); return; }
+  if (G.sel === G.runner && G.runner){
+    if (cheb(G.runner.c, G.runner.r, c, r) <= 3 && !enemyAt(c, r) && !(c === G.runner.c && r === G.runner.r)){ G.runner.order = { t: 'move', c, r }; G.sel = null; beep(700, .06, .05); next(); }
+    else { toast('Löparen springer högst tre rutor och inte in i en ställning', '#a3adb5'); }
+    return;
   }
   const g0 = groupAt(c, r);
   if (g0){
-    if (G.sel === g0){ g0.order = { t: 'hold' }; G.sel = null; beep(520, .05, .05); }
+    if (G.sel === g0){ g0.order = { t: 'hold' }; G.sel = null; beep(520, .05, .05); next(); }
     else { G.sel = g0; beep(640, .05, .05); if (G.hint < 1) G.hint = 1; }
     return;
   }
   const g = G.sel; if (!g) return;
   const e = enemyAt(c, r);
-  if (e){
+  if (e && e.seen){
+    if (e.kind === 'tank'){ if (fireTargets(g).includes(e)){ g.order = { t: 'fire', e }; G.sel = null; beep(760, .06, .05); next(); return; }
+      toast(g.bazooka ? 'För långt för bazookan – högst 3 rutor' : 'Pansarvagnen kräver bazooka (2:a gruppen) eller artilleri', '#a3adb5'); return; }
     if (cheb(g.c, g.r, c, r) === 1 && !G.noMove){ g.order = { t: 'assault', e, c, r }; G.sel = null; beep(800, .08, .06); next(); return; }
     if (fireTargets(g).includes(e)){ g.order = { t: 'fire', e }; G.sel = null; beep(760, .06, .05); if (G.hint < 3) G.hint = 3; next(); return; }
     toast(cheb(g.c, g.r, c, r) <= 1 ? 'För nära för att skjuta' : 'Ingen fri sikt eller för långt', '#a3adb5'); return;
   }
   const mv = movesFor(g).find(m => m.c === c && m.r === r && !m.assault);
-  if (mv && G.grp.some(q => q !== g && q.alive && q.order && (q.order.t === 'move' || q.order.t === 'assault') && q.order.c === c && q.order.r === r)){ toast('En annan grupp går redan dit', '#a3adb5'); return; }
+  if (mv && G.grp.some(q => q !== g && q.alive && q.order && q.order.t === 'move' && q.order.c === c && q.order.r === r)){ toast('En annan grupp går redan dit', '#a3adb5'); return; }
   if (mv){ g.order = { t: 'move', c, r }; G.sel = null; beep(700, .06, .05); if (G.hint < 2) G.hint = 2; next(); return; }
   G.sel = null;
 }
-function next(){ const n = G.grp.find(g => g.alive && !g.order); if (n) G.sel = n; }
+function next(){ const n = G.grp.find(g => g.alive && !g.order); if (n){ G.sel = n; return; } if (G.runner && G.runner.alive && !G.runner.order) G.sel = G.runner; else G.sel = null; }
 cvs.addEventListener('touchstart', e => { e.preventDefault(); for (const t of e.changedTouches) tap(toWorld(t.clientX, t.clientY)); }, { passive: false });
 cvs.addEventListener('mousedown', e => tap(toWorld(e.clientX, e.clientY)));
 addEventListener('keydown', e => { if (e.code === 'Escape' || e.code === 'KeyP') togglePause(); if (e.code === 'Enter' && state === 'plan') endTurn(); });
 
 /* ============ Dragets genomförande ============ */
-let Q = [];   // tidsatta händelser under genomförandet
+let Q = [];
 function at(t, fn){ Q.push({ t, fn }); }
+function shot(t, e, tgt, isRunner){
+  at(t, () => {
+    if (!e.alive || state === 'over' || !(isRunner ? tgt.alive : tgt.alive)) return;
+    const k = KIND[e.kind];
+    e.seen = true; e.flashT = .18;
+    if (e.kind === 'mg' || e.kind === 'tank') sfxRattle(); else sfxShot(e.kind === 'sniper' ? 1.1 : .7);
+    const tx = isRunner ? tgt.x : tgt.x, ty = isRunner ? tgt.y : tgt.y;
+    for (let k2 = 0; k2 < (e.kind === 'mg' ? 4 : 1); k2++) G.tracers.push({ x1: e.x, y1: e.y, x2: tx + rand(-14, 14), y2: ty + rand(-12, 12), t: .1 });
+    if (e.kind === 'tank'){ burst(tx, ty, 16, ['#6b6658', '#2a2a28', '#e8a24a'], 120); sfxBoom(.5); }
+    const t2 = G.map[tgt.c][tgt.r].t, d = cdist(tgt.c, tgt.r, e.c, e.r);
+    let p = COVER[t2] * (1 - Math.max(0, d - 3) * .05);
+    if (e.kind === 'sniper') p = t2 === 'open' || t2 === 'road' ? .42 : .2;
+    if (!isRunner && tgt.order && tgt.order.t === 'hold') p *= .75;
+    if (isRunner) p = .22;
+    if (e.kind === 'patrol') p *= .8;
+    if (Math.random() < p){
+      if (isRunner){ tgt.alive = false; toast('Löparen träffades – kontakten med I-kompaniet uteblev', '#e06a4a', 3); }
+      else hit(tgt, 1, e.kind);
+      if (e.kind === 'sniper' && !G.sniperWarned){ G.sniperWarned = true; radio('Prickskytt! Han sitter i kyrktornet.'); }
+    }
+  });
+}
 function endTurn(){
   if (state !== 'plan') return;
   state = 'resolve'; G.sel = null; G.mode = null; G.rt = 0; Q = [];
-  const turnLost0 = G.levelLost;
   let tt = .1;
   // 1. artilleri
   if (G.artTarget && G.artTarget.alive){ const e = G.artTarget;
-    at(tt, () => { sfxBoom(1); G.shake = 10; burst(cx(e.c), cy(e.r), 40, ['#e8a24a', '#f4d27a', '#6b6658', '#2a2a28'], 220); e.str -= 1; e.sup = 2; e.supNow = true; e.hitT = .4; float(cx(e.c), cy(e.r) - 20, '-1', '#e9cf8a'); if (e.str <= 0) kill(e, null); });
+    at(tt, () => { sfxBoom(1); G.shake = 10; burst(e.x, e.y, 40, ['#e8a24a', '#f4d27a', '#6b6658', '#2a2a28'], 220);
+      if (e.kind === 'tank'){ if (Math.random() < .45) kill(e, null); else { e.sup = 2; e.supNow = true; toast('Pansarvagnen skakad men intakt', '#e9cf8a'); } return; }
+      e.str -= 1; e.sup = 2; e.supNow = true; e.hitT = .4; float(e.x, e.y - 20, '-1', '#e9cf8a'); if (e.str <= 0) kill(e, null); });
     tt += .6; }
   G.artTarget = null;
   // 2. egen eld
   for (const g of G.grp){ if (!g.alive || !g.order || g.order.t !== 'fire') continue; const e = g.order.e; if (!e.alive) continue;
     const gg = g; at(tt, () => {
-      if (!e.alive) return; e.supNow = true;
-      const d = cdist(gg.c, gg.r, e.c, e.r), p = clamp(.12 + gg.men * .05 + (d <= 2.5 ? .12 : 0) - d * .02, .08, .55);
-      for (let k = 0; k < 5; k++) setTimeout(() => { sfxShot(.5); G.tracers.push({ x1: cx(gg.c), y1: cy(gg.r), x2: cx(e.c) + rand(-14, 14), y2: cy(e.r) + rand(-12, 12), t: .08, mine: true }); }, k * 70);
-      if (Math.random() < p){ e.str--; e.hitT = .4; float(cx(e.c), cy(e.r) - 20, '-1', '#e9cf8a'); if (e.str <= 0) kill(e, gg); }
-      else float(cx(e.c), cy(e.r) - 20, 'NEDHÅLLEN', '#c9d0d6');
+      if (!e.alive || !gg.alive) return;
+      if (e.kind === 'tank'){ sfxBoom(.6); G.tracers.push({ x1: gg.x, y1: gg.y, x2: e.x, y2: e.y, t: .25, mine: true, big: true });
+        if (Math.random() < .55){ kill(e, gg); radio('Bazookan träffade – pansarvagnen brinner!'); } else { e.supNow = true; float(e.x, e.y - 20, 'BOM', '#c9d0d6'); } return; }
+      e.supNow = true;
+      const d = cdist(gg.c, gg.r, e.c, e.r), p = clamp(.12 + men(gg) * .05 + (d <= 2.5 ? .12 : 0) - d * .02, .08, .55);
+      for (let k = 0; k < Math.max(2, men(gg)); k++) at(G.rt + k * .07, () => { sfxShot(.5); G.tracers.push({ x1: gg.x + rand(-10, 10), y1: gg.y + rand(-8, 8), x2: e.x + rand(-14, 14), y2: e.y + rand(-12, 12), t: .08, mine: true }); });
+      if (Math.random() < p){ e.str--; e.hitT = .4; float(e.x, e.y - 20, '-1', '#e9cf8a'); if (e.str <= 0) kill(e, gg); }
+      else float(e.x, e.y - 20, 'NEDHÅLLEN', '#c9d0d6');
     }); tt += .35; }
   tt += .2;
-  // 3. förflyttning och storm
+  // 3. förflyttning, storm och löparen
   at(tt, () => {
-    for (const g of G.grp){ if (!g.alive || !g.order) continue;
-      if (g.order.t === 'move'){ g.c = g.order.c; g.r = g.order.r; }
+    const storm = new Map(); for (const g of G.grp) if (g.alive && g.order && g.order.t === 'assault') storm.set(g.order.e, (storm.get(g.order.e) || 0) + 1);
+    for (const g of G.grp){ if (!g.alive) continue;
+      const moved = g.order && (g.order.t === 'move' || g.order.t === 'assault');
+      g.still = moved ? 0 : g.still + 1;
+      if (!g.order) continue;
+      if (g.order.t === 'move'){ const e = enemyAt(g.order.c, g.order.r);
+        if (e && !e.seen){ e.seen = true; hit(g, Math.min(men(g), 2), e.kind); toast(ord(g.n) + ' gruppen gick rakt in i en dold ställning!', '#e06a4a', 2.6); }
+        else { g.c = g.order.c; g.r = g.order.r; } }
       if (g.order.t === 'assault'){ const e = g.order.e;
-        if (!e.alive || e.supNow || e.sup > 0){ if (e.alive) kill(e, g, true); g.c = g.order.c; g.r = g.order.r; }
-        else { const loss = Math.min(g.men, 2); hit(g, loss); toast('Stormningen slogs tillbaka – ställningen var inte nedhållen', '#e06a4a', 2.6); } } }
+        if (!e.alive || e.supNow || e.sup > 0 || storm.get(e) >= 2){ if (e.alive){ kill(e, g, true); if (storm.get(e) >= 2) toast('Två grupper stormade samtidigt!', '#e9cf8a', 1.8); } if (!enemyAt(g.order.c, g.order.r) && !groupAt(g.order.c, g.order.r, g)){ g.c = g.order.c; g.r = g.order.r; } }
+        else { hit(g, Math.min(men(g), 2), e.kind); toast('Stormningen slogs tillbaka – håll ner ställningen eller storma med två grupper', '#e06a4a', 2.8); } } }
+    const R = G.runner;
+    if (R && R.alive && R.order){ R.c = R.order.c; R.r = R.order.r; R.order = null;
+      if (R.c === 11 && R.r === 0 && !G.runnerDone){ G.runnerDone = true; R.alive = false; G.score += 300; G.pincer = 2;
+        radio('Speirs har kontakt med I-kompaniet! De anfaller byn från andra sidan.'); toast('Kontakt med I-kompaniet +300', '#a7c97a', 3); } }
+    reveal(4.5);
   });
-  tt += .7;
-  // 4. tysk eld
-  const shooters = G.en.slice();
-  at(tt, () => {
-    let delay = 0;
-    for (const e of shooters){
-      if (!e.alive || e.supNow || e.sup > 0) continue;
-      if (e.kind === 'sniper' && G.turn % 2 === 0) continue;
-      const k = KIND[e.kind];
-      const vis = G.grp.filter(g => g.alive && cdist(g.c, g.r, e.c, e.r) <= k.range && los(e.c, e.r, g.c, g.r));
-      if (!vis.length) continue;
-      const tgt = e.kind === 'sniper' ? pick(vis) : vis.reduce((a, b) => cdist(a.c, a.r, e.c, e.r) <= cdist(b.c, b.r, e.c, e.r) ? a : b);
-      for (let s = 0; s < k.shots; s++){
-        const dd = delay; delay += .28;
-        setTimeout(() => {
-          if (!tgt.alive || state === 'over') return;
-          const t = G.map[tgt.c][tgt.r].t, d = cdist(tgt.c, tgt.r, e.c, e.r);
-          let p = COVER[t] * (1 - Math.max(0, d - 3) * .05);
-          if (e.kind === 'sniper') p = t === 'open' || t === 'road' ? .42 : .2;
-          if (e.kind === 'mg') sfxRattle(); else sfxShot(e.kind === 'sniper' ? 1.1 : .7);
-          for (let k2 = 0; k2 < (e.kind === 'mg' ? 4 : 1); k2++) G.tracers.push({ x1: cx(e.c), y1: cy(e.r), x2: cx(tgt.c) + rand(-14, 14), y2: cy(tgt.r) + rand(-12, 12), t: .1 });
-          if (Math.random() < p){ hit(tgt, 1); if (e.kind === 'sniper' && !G.sniperWarned){ G.sniperWarned = true; toast('Prickskytt i kyrktornet!', '#e06a4a', 2.6); } }
-        }, dd * 1000);
-      }
-    }
-    G.lastDelay = delay;
-  });
-  tt += .2;
-  at(tt, () => { at(G.rt + (G.lastDelay || 0) + .6, () => finishTurn(turnLost0)); });
+  tt += .8;
+  // 4. tyskarnas drag
+  at(tt, () => germanPhase());
 }
-function hit(g, n){ g.men -= n; g.hitT = .5; G.lost += n; G.levelLost += n; G.score = Math.max(0, G.score - 60 * n); float(g.x, g.y - 22, '-' + n, '#e06a4a'); if (navigator.vibrate) navigator.vibrate(30);
-  if (g.men <= 0){ g.alive = false; g.men = 0; toast(ord(g.n) + ' gruppen är utslagen', '#e06a4a', 2.4); } }
+function germanPhase(){
+  let t = G.rt + .1;
+  const pincer = G.pincer > 0;
+  // granatkastare på inskjutna rutor
+  for (const m of G.marks){ const mm = m;
+    at(t, () => { sfxWhistle(); });
+    at(t + .7, () => { sfxBoom(.9); G.shake = 8; for (let i = 0; i < 3; i++) burst(cx(mm.c) + rand(-18, 18), cy(mm.r) + rand(-14, 14), 18, ['#e8a24a', '#5f676c', '#eef3f5'], 140);
+      const g = groupAt(mm.c, mm.r); if (g){ const t2 = G.map[g.c][g.r].t; hit(g, Math.min(men(g), t2 === 'open' || t2 === 'road' ? 2 : 1), 'mortar'); } });
+    t += .9; }
+  G.marks = [];
+  // pansarvagn och motanfall rör sig
+  for (const e of G.en){ if (!e.alive) continue;
+    if (e.kind === 'tank' && !(e.supNow || e.sup > 0) && e.r < 4 && !enemyAt(10, e.r + 1) && !groupAt(10, e.r + 1)){ e.r++; sfxTank(); }
+    if (e.kind === 'patrol' && !(e.supNow || e.sup > 0)){
+      const tg = G.grp.filter(g => g.alive).sort((a, b) => cdist(a.c, a.r, e.c, e.r) - cdist(b.c, b.r, e.c, e.r))[0];
+      if (tg && cheb(tg.c, tg.r, e.c, e.r) === 1){ const tgt = tg;
+        at(t, () => { if (!e.alive || !tgt.alive) return; sfxRattle(); burst((e.x + tgt.x) / 2, (e.y + tgt.y) / 2, 14, ['#e8a24a', '#6b6658'], 90); if (Math.random() < .5) hit(tgt, 1, 'patrol'); e.str--; float(e.x, e.y - 20, '-1', '#e9cf8a'); if (e.str <= 0) kill(e, tgt); toast('Närstrid!', '#e06a4a', 1.4); });
+        t += .5; e.melee = true; continue; }
+      if (tg){ let best = null, bd = 1e9;
+        for (let c = e.c - 1; c <= e.c + 1; c++) for (let r = e.r - 1; r <= e.r + 1; r++){ if (c < 1 || r < 0 || c >= COLS || r >= ROWS) continue;
+          if (enemyAt(c, r) || groupAt(c, r) || G.map[c][r].t === 'forest') continue; const d = cdist(c, r, tg.c, tg.r); if (d < bd){ bd = d; best = { c, r }; } }
+        if (best){ e.c = best.c; e.r = best.r; } } }
+  }
+  // eld från ställningarna
+  for (const e of G.en){
+    if (!e.alive || e.supNow || e.sup > 0 || e.melee){ e.melee = false; continue; }
+    if (pincer && e.kind !== 'tank' && e.kind !== 'patrol') continue;
+    if (e.kind === 'sniper' && G.turn % 2 === 0) continue;
+    const k = KIND[e.kind];
+    const vis = G.grp.filter(g => g.alive && cdist(g.c, g.r, e.c, e.r) <= k.range && los(e.c, e.r, g.c, g.r));
+    const R = G.runner, runnerVis = R && R.alive && cdist(R.c, R.r, e.c, e.r) <= k.range && los(e.c, e.r, R.c, R.r);
+    if (!vis.length && !runnerVis) continue;
+    let tgt, isR = false;
+    if (runnerVis && (!vis.length || Math.random() < .5)){ tgt = R; isR = true; }
+    else tgt = e.kind === 'sniper' ? pick(vis) : vis.reduce((a, b) => cdist(a.c, a.r, e.c, e.r) <= cdist(b.c, b.r, e.c, e.r) ? a : b);
+    for (let s = 0; s < k.shots; s++){ shot(t, e, tgt, isR); t += .28; }
+  }
+  if (pincer) at(t, () => toast('I-kompaniet håller tyskarna i byn sysselsatta', '#a7c97a', 1.6));
+  // tyskarna reagerar inför nästa drag
+  at(t + .2, () => {
+    if (state === 'over') return;
+    // granatkastare skjuter in sig på grupper som ligger still
+    G.mortarCd = Math.max(0, (G.mortarCd || 0) - 1);
+    if (G.turn >= 2 && G.mortarCd <= 0){ const still = G.grp.filter(g => g.alive && g.still >= 2 && g.c > 1).sort((a, b) => b.still - a.still)[0];
+      if (still){ G.marks.push({ c: still.c, r: still.r }); G.mortarCd = 2; radio('Granatkastare skjuter in sig på ' + ord(still.n) + ' gruppen – flytta på er!'); } }
+    // pansarvagnen anländer
+    if (G.ms.tank && G.turn === G.ms.tank && !G.en.some(e => e.kind === 'tank')){ G.en.push(newEnemy('tank', 10, 0, true)); sfxTank(); radio('Pansarvagn på vägen in i byn! Bazookan fram – 2:a gruppen.'); }
+    // motanfall
+    const statics = G.en.filter(e => e.alive && e.kind !== 'patrol' && e.kind !== 'tank').length, patrols = G.en.filter(e => e.alive && e.kind === 'patrol').length;
+    G.counterCd = Math.max(0, (G.counterCd || 0) - 1);
+    const maxP = G.level >= 3 ? 2 : 1, onlyOnce = G.level === 1 && G.countered;
+    const total = G.en.filter(e => e.kind === 'patrol').length;
+    if (statics && !onlyOnce && total < 1 + Math.floor(G.level / 2) && G.counterCd <= 0 && G.turn >= G.ms.counterFrom && patrols < maxP && (G.justTaken || (G.level > 1 && Math.random() < .15))){
+      const spots = [[11, 5], [11, 0], [10, 5], [10, 0], [11, 3]].filter(([c, r]) => !enemyAt(c, r) && !groupAt(c, r));
+      if (spots.length){ const [c, r] = pick(spots); G.en.push(newEnemy('patrol', c, r, true)); G.countered = true; G.counterCd = 3; radio('Tyskt motanfall från byn!'); } }
+    G.justTaken = false;
+    finishLater(t + .9);
+  });
+}
+function finishLater(t){ at(t, finishTurn); }
+function hit(g, n, by){
+  for (let i = 0; i < n; i++){ const alive = g.men.filter(s => s.alive); if (!alive.length) break; const s = alive[alive.length - 1]; s.alive = false;
+    G.fallen.push({ x: s.x, y: s.y, a: rand(-1, 1) }); if (i === 0) toast(s.rank + ' ' + s.name + ' (' + ord(g.n) + ' gruppen) träffad', '#e06a4a', 2); }
+  g.hitT = .5; G.lost += n; G.levelLost += n; G.score = Math.max(0, G.score - 60 * n); float(g.x, g.y - 24, '-' + n, '#e06a4a'); if (navigator.vibrate) navigator.vibrate(30);
+  if (men(g) <= 0){ g.alive = false; toast(ord(g.n) + ' gruppen är utslagen', '#e06a4a', 2.4); if (g.bazooka) radio('Bazookan är förlorad.'); }
+}
 function kill(e, g, assault){
-  e.alive = false; e.str = 0; G.taken++; G.levelTaken++; const pts = KIND[e.kind].pts; G.score += pts;
-  burst(cx(e.c), cy(e.r), 26, ['#8a8a80', '#4a4a44', '#e8e2d0'], 140); sfxBoom(.4);
+  if (!e.alive) return;
+  e.alive = false; e.str = 0; e.seen = true; G.taken++; G.levelTaken++; const pts = KIND[e.kind].pts; G.score += pts; G.justTaken = true;
+  burst(e.x, e.y, 26, ['#8a8a80', '#4a4a44', '#e8e2d0'], 140); sfxBoom(.4);
   toast((assault ? 'Stormad: ' : 'Utslagen: ') + KIND[e.kind].n.toLowerCase() + ' +' + pts, '#e9cf8a', 2);
+  if (isBuilding(e.c, e.r)) G.map[e.c][e.r].cleared = true;
 }
 function finishTurn(){
   for (const e of G.en){ e.sup = Math.max(0, e.sup - 1); e.supNow = false; }
   for (const s of G.smoke) s.turns--; G.smoke = G.smoke.filter(s => s.turns > 0);
   for (const g of G.grp) g.order = null;
-  G.noMove = false;
-  if (G.en.every(e => !e.alive)) return levelDone();
+  G.noMove = false; G.pincer = Math.max(0, G.pincer - 1);
+  const goals = G.en.filter(e => e.alive && e.kind !== 'patrol');
+  if (!goals.length){ if (G.en.some(e => e.alive)) toast('Motanfallet drar sig tillbaka', '#a7c97a'); return levelDone(); }
   if (G.grp.every(g => !g.alive)) return gameOver('wiped');
   G.turn++;
   if (G.turn > G.maxTurn) return gameOver('time');
+  reveal();
   if (G.level === 1 && G.turn === 3 && G.swapped === null){ state = 'decide'; show('decideScreen'); return; }
+  if (G.grp.every(g => !g.alive || g.c <= 1) && G.turn >= 4 && !G.nagged){ G.nagged = true; radio('Bataljonen: Ni kan inte stanna i skogen – fram över fältet!'); }
   state = 'plan'; next();
 }
 function decide(swap){
   G.swapped = swap; show(null); state = 'plan';
-  if (swap){ G.score += 200; G.smokeLeft++; toast('Ny chef tar befälet – anfallet fortsätter! +1 rök', '#e9cf8a', 3.2); }
-  else { G.noMove = true; toast('Ni väntar på order – ingen grupp kan förflytta sig detta drag', '#e06a4a', 3.4); }
+  if (swap){ G.score += 200; G.smokeLeft++;
+    radio('Winters: Speirs tar över. Få fart på anfallet!');
+    const lead = G.grp.filter(g => g.alive).sort((a, b) => b.c - a.c)[0];
+    if (lead && G.ms.runner){ G.runner = { c: lead.c, r: lead.r, alive: true, x: lead.x, y: lead.y, order: null };
+      radio('Speirs springer mot I-kompaniet på andra sidan byn – led honom till flaggan uppe till höger.', 4.4); } }
+  else { G.noMove = true; radio('Inga order kommer. Grupperna ligger kvar i snön detta drag.'); }
   next();
 }
 function updAnim(dt){
   if (state === 'resolve'){ G.rt += dt; Q.sort((a, b) => a.t - b.t); while (Q.length && Q[0].t <= G.rt){ const q = Q.shift(); q.fn(); } }
-  for (const g of G.grp){ const tx = cx(g.c), ty = cy(g.r); g.x += (tx - g.x) * Math.min(1, dt * 6); g.y += (ty - g.y) * Math.min(1, dt * 6); g.hitT = Math.max(0, g.hitT - dt); }
-  for (const e of G.en) e.hitT = Math.max(0, e.hitT - dt);
+  for (const g of G.grp){ const tx = cx(g.c), ty = cy(g.r); g.x += (tx - g.x) * Math.min(1, dt * 5); g.y += (ty - g.y) * Math.min(1, dt * 5); g.hitT = Math.max(0, g.hitT - dt);
+    g.men.forEach((s, k) => { if (!s.alive) return; const ax = g.x + OFF[k][0], ay = g.y + OFF[k][1], sp = 2.2 + k * .5;
+      const nx = s.x + (ax - s.x) * Math.min(1, dt * sp), ny = s.y + (ay - s.y) * Math.min(1, dt * sp);
+      s.run = dist(nx, ny, s.x, s.y) > .15; s.dir = s.run ? Math.atan2(ny - s.y, nx - s.x) : 0;
+      s.acc = (s.acc || 0) + dist(nx, ny, s.x, s.y); if (s.acc > 5){ s.acc = 0; G.prints.push({ x: nx, y: ny }); if (G.prints.length > 900) G.prints.shift(); }
+      s.x = nx; s.y = ny; s.walk = (s.walk || 0) + (s.run ? dt * 14 : 0); }); }
+  if (G.runner){ const R = G.runner, tx = cx(R.c), ty = cy(R.r); const nx = R.x + (tx - R.x) * Math.min(1, dt * 4), ny = R.y + (ty - R.y) * Math.min(1, dt * 4);
+    R.acc = (R.acc || 0) + dist(nx, ny, R.x, R.y); if (R.acc > 5){ R.acc = 0; G.prints.push({ x: nx, y: ny, r: 1 }); } R.x = nx; R.y = ny; }
+  for (const e of G.en){ e.x += (cx(e.c) - e.x) * Math.min(1, dt * 3); e.y += (cy(e.r) - e.y) * Math.min(1, dt * 3); e.hitT = Math.max(0, e.hitT - dt); e.flashT = Math.max(0, e.flashT - dt); }
   for (const pt of G.parts){ pt.t -= dt; pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vx *= .92; pt.vy *= .92; }
   G.parts = G.parts.filter(pt => pt.t > 0);
   for (const tr of G.tracers) tr.t -= dt; G.tracers = G.tracers.filter(t => t.t > 0);
   for (const t of G.toasts) t.t -= dt; G.toasts = G.toasts.filter(t => t.t > 0);
   for (const f of G.floats){ f.t -= dt; f.y -= 14 * dt; } G.floats = G.floats.filter(f => f.t > 0);
+  if (G.radio.length){ const r0 = G.radio[0]; if (r0.wait > 0) r0.wait -= dt; else { if (!r0.beeped){ r0.beeped = true; sfxRadio(); } r0.t -= dt; if (r0.t <= 0) G.radio.shift(); } }
   G.shake = Math.max(0, G.shake - 30 * dt); G.t += dt;
 }
 
@@ -477,6 +641,15 @@ function drawCell(c, r, cell){
   ctx.strokeStyle = 'rgba(60,72,82,.18)'; ctx.lineWidth = 1; ctx.strokeRect(x + .5, y + .5, CW - 1, CHh - 1);
 }
 function drawPips(x, y, n, max, col){ for (let i = 0; i < max; i++){ ctx.fillStyle = i < n ? col : 'rgba(0,0,0,.35)'; ctx.fillRect(x + i * 7, y, 5, 5); } }
+function drawMan(s, col, helm, scale){
+  ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.dir || 0); ctx.scale(scale, scale);
+  const sw = s.run ? Math.sin(s.walk) * 2.2 : 0;
+  ctx.fillStyle = '#20251c'; ctx.fillRect(-3.5 + sw, 2.2, 3, 1.8); ctx.fillRect(-3.5 - sw, -4, 3, 1.8);
+  ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(0, 0, 4, 4.8, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#1d1a14'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(1, 2.5); ctx.lineTo(8, 3.5); ctx.stroke();
+  ctx.fillStyle = helm; ctx.beginPath(); ctx.arc(.6, 0, 2.8, 0, 7); ctx.fill();
+  ctx.restore();
+}
 function render(){
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#12171c'; ctx.fillRect(0, 0, cvs.width, cvs.height);
   if (!G || !G.map) return;
@@ -484,55 +657,81 @@ function render(){
   ctx.setTransform(sc, 0, 0, sc, ox + sx * sc, oy + sy * sc);
   ctx.fillStyle = '#1b2026'; ctx.fillRect(-400, -400, W + 800, H + 800);
   for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) drawCell(c, r, G.map[c][r]);
-  ctx.fillStyle = 'rgba(30,36,42,.55)'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'center';
-  ctx.fillStyle = '#a3adb5'; ctx.fillText('BOIS JACQUES', cx(0) + 6, GY - 6); ctx.fillText('S N Ö F Ä L T E T', cx(5), GY - 6); ctx.fillText('F O Y', cx(10), GY - 6);
+  // fotspår och stupade i snön
+  ctx.fillStyle = 'rgba(110,122,132,.32)'; for (const p of G.prints) ctx.fillRect(p.x - 1, p.y - .8, 2, 1.6);
+  for (const f of G.fallen){ ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.a); ctx.fillStyle = 'rgba(60,62,44,.8)'; ctx.beginPath(); ctx.ellipse(0, 0, 6, 3, 0, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(70,74,50,.9)'; ctx.beginPath(); ctx.arc(7, 0, 2.4, 0, 7); ctx.fill(); ctx.restore(); }
+  // okända hus
+  for (let c = 9; c < COLS; c++) for (let r = 0; r < ROWS; r++){ if (!isBuilding(c, r) || G.map[c][r].cleared) continue; const e = enemyAt(c, r); if (e && e.seen) continue;
+    ctx.fillStyle = 'rgba(214,178,94,.85)'; ctx.font = '700 16px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('?', cx(c), cy(r) + 10); }
+  // I-kompaniets flagga
+  if (G.runner && G.runner.alive){ const fx = cx(11), fy = cy(0); ctx.strokeStyle = '#2a2a28'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(fx - 10, fy + 18); ctx.lineTo(fx - 10, fy - 16); ctx.stroke();
+    ctx.fillStyle = '#5c7a4a'; ctx.beginPath(); ctx.moveTo(fx - 10, fy - 16); ctx.lineTo(fx + 14, fy - 10); ctx.lineTo(fx - 10, fy - 4); ctx.fill();
+    ctx.fillStyle = '#2a3a28'; ctx.font = '700 9px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('I-KOMP', fx + 2, fy + 26); }
+  // snöstorm: begränsad sikt
+  if (G.vis < 20){ ctx.fillStyle = 'rgba(238,242,245,.28)'; ctx.fillRect(GX, GY, COLS * CW, ROWS * CHh); }
   // rök
   for (const s of G.smoke){ const x = cx(s.c), y = cy(s.r);
     for (let i = 0; i < 4; i++){ ctx.fillStyle = `rgba(235,238,240,${.35 + .15 * s.turns})`; ctx.beginPath(); ctx.arc(x - 14 + i * 10 + Math.sin(G.t + i) * 3, y - 6 + (i % 2) * 10, 16, 0, 7); ctx.fill(); } }
+  // inskjutna rutor för granatkastare
+  for (const m of G.marks){ const x = cx(m.c), y = cy(m.r), p = .5 + .5 * Math.sin(G.t * 8);
+    ctx.strokeStyle = `rgba(200,50,30,${.5 + .4 * p})`; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x, y, 26, 0, 7); ctx.moveTo(x - 32, y); ctx.lineTo(x + 32, y); ctx.moveTo(x, y - 30); ctx.lineTo(x, y + 30); ctx.stroke();
+    ctx.fillStyle = '#9b2f1e'; ctx.font = '700 9px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('GRANATKASTARE', x, y - 33); }
   // markeringar för vald grupp
   const g = G.sel;
-  if (state === 'plan' && g){
+  if (state === 'plan' && g && g !== G.runner){
     for (const m of movesFor(g)){ const x = GX + m.c * CW, y = GY + m.r * CHh;
       if (m.assault){ ctx.strokeStyle = 'rgba(214,178,94,.95)'; ctx.lineWidth = 3; ctx.strokeRect(x + 3, y + 3, CW - 6, CHh - 6); ctx.fillStyle = '#7a5a10'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('STORMA', x + CW / 2, y + CHh - 6); }
       else { ctx.fillStyle = cheb(g.c, g.r, m.c, m.r) === 2 ? 'rgba(90,160,90,.22)' : 'rgba(90,160,90,.35)'; ctx.fillRect(x + 2, y + 2, CW - 4, CHh - 4);
         ctx.fillStyle = 'rgba(40,70,40,.7)'; ctx.font = '9px "Special Elite", monospace'; ctx.textAlign = 'center'; ctx.fillText(TNAME[G.map[m.c][m.r].t], x + CW / 2, y + CHh - 6); } }
-    for (const e of fireTargets(g)){ ctx.strokeStyle = 'rgba(200,60,40,.9)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(cx(e.c), cy(e.r), 24, 0, 7); ctx.stroke();
-      ctx.fillStyle = '#9b2f1e'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('SKJUT', cx(e.c), cy(e.r) + 36); }
+    for (const e of fireTargets(g)){ ctx.strokeStyle = 'rgba(200,60,40,.9)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(e.x, e.y, 24, 0, 7); ctx.stroke();
+      ctx.fillStyle = '#9b2f1e'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(e.kind === 'tank' ? 'BAZOOKA' : 'SKJUT', e.x, e.y + 36); }
   }
+  if (state === 'plan' && g && g === G.runner){
+    for (let c = g.c - 3; c <= g.c + 3; c++) for (let r = g.r - 3; r <= g.r + 3; r++){ if (c < 0 || r < 0 || c >= COLS || r >= ROWS || (c === g.c && r === g.r) || enemyAt(c, r)) continue;
+      ctx.fillStyle = c === 11 && r === 0 ? 'rgba(92,122,74,.55)' : 'rgba(90,160,90,.2)'; ctx.fillRect(GX + c * CW + 2, GY + r * CHh + 2, CW - 4, CHh - 4); } }
   if (state === 'plan' && G.mode){ ctx.fillStyle = G.mode === 'smoke' ? 'rgba(255,255,255,.18)' : 'rgba(200,60,40,.12)'; ctx.fillRect(GX + (G.mode === 'smoke' ? CW : 0), GY, (G.mode === 'smoke' ? 9 : 12) * CW, ROWS * CHh); }
   // ordrar
-  for (const q of G.grp){ if (!q.alive || !q.order || state !== 'plan') continue; const o = q.order;
+  const arrows = G.grp.filter(q => q.alive && q.order).concat(G.runner && G.runner.alive && G.runner.order ? [G.runner] : []);
+  for (const q of arrows){ if (state !== 'plan') break; const o = q.order;
     ctx.lineWidth = 3; ctx.setLineDash(o.t === 'fire' ? [5, 5] : []);
-    if (o.t === 'move' || o.t === 'assault'){ ctx.strokeStyle = o.t === 'assault' ? '#d6b25e' : '#3f7a3f'; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(cx(o.c), cy(o.r)); ctx.stroke();
+    if (o.t === 'move' || o.t === 'assault'){ ctx.strokeStyle = o.t === 'assault' ? '#d6b25e' : q === G.runner ? '#5c7a4a' : '#3f7a3f'; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(cx(o.c), cy(o.r)); ctx.stroke();
       ctx.setLineDash([]); const a = Math.atan2(cy(o.r) - q.y, cx(o.c) - q.x); ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.moveTo(cx(o.c), cy(o.r)); ctx.lineTo(cx(o.c) - Math.cos(a - .4) * 12, cy(o.r) - Math.sin(a - .4) * 12); ctx.lineTo(cx(o.c) - Math.cos(a + .4) * 12, cy(o.r) - Math.sin(a + .4) * 12); ctx.fill(); }
-    if (o.t === 'fire'){ ctx.strokeStyle = '#b5452f'; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(cx(o.e.c), cy(o.e.r)); ctx.stroke(); }
+    if (o.t === 'fire'){ ctx.strokeStyle = '#b5452f'; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(o.e.x, o.e.y); ctx.stroke(); }
     ctx.setLineDash([]); }
-  if (G.artTarget){ const e = G.artTarget; ctx.strokeStyle = `rgba(200,60,40,${.5 + .4 * Math.sin(G.t * 8)})`; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(cx(e.c), cy(e.r), 30, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
-  // tyska ställningar
-  for (const e of G.en){ if (!e.alive) continue; const x = cx(e.c), y = cy(e.r) + 4, k = KIND[e.kind];
-    ctx.fillStyle = e.hitT > 0 ? '#9c5a3a' : e.kind === 'sniper' ? '#4c5148' : '#6a6f68'; ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.fill();
-    ctx.strokeStyle = e.supNow || e.sup > 0 ? '#c9d0d6' : '#2a2a28'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = '#eef1f2'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(e.kind === 'mg' ? 'KSP' : e.kind === 'sniper' ? '⌖' : 'GRP', x, y + 4);
-    if (e.kind !== 'sniper') drawPips(x - 10, y + 19, e.str, k.str, '#2a2a28');
-    if (e.sup > 0 || e.supNow){ ctx.fillStyle = '#eef1f2'; ctx.font = '8px "Special Elite", monospace'; ctx.fillText('nedhållen', x, y - 21); } }
-  // egna grupper
+  if (G.artTarget){ const e = G.artTarget; ctx.strokeStyle = `rgba(200,60,40,${.5 + .4 * Math.sin(G.t * 8)})`; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(e.x, e.y, 30, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+  // tyskar
+  for (const e of G.en){ if (!e.alive || !e.seen) continue; const x = e.x, y = e.y + 4, k = KIND[e.kind];
+    if (e.kind === 'tank'){ ctx.save(); ctx.translate(x, y); ctx.fillStyle = e.hitT > 0 ? '#9c5a3a' : '#59605a'; ctx.fillRect(-13, -18, 26, 34); ctx.fillStyle = '#3c423d'; ctx.fillRect(-16, -18, 4, 34); ctx.fillRect(12, -18, 4, 34);
+      ctx.fillStyle = '#4a514b'; ctx.beginPath(); ctx.arc(0, 0, 9, 0, 7); ctx.fill(); ctx.fillStyle = '#2a2e2b'; ctx.fillRect(-2, -30, 4, 22); ctx.restore(); }
+    else if (e.kind === 'patrol'){ for (let i = 0; i < e.str; i++) drawMan({ x: x + OFF[i][0] * .8, y: y + OFF[i][1] * .8, dir: Math.PI, run: state === 'resolve', walk: G.t * 12 }, e.hitT > 0 ? '#9c5a3a' : '#6a6f68', '#4a4e48', 1.5); }
+    else { ctx.fillStyle = e.hitT > 0 ? '#9c5a3a' : e.kind === 'sniper' ? '#4c5148' : '#6a6f68'; ctx.beginPath(); ctx.arc(x, y, 14, 0, 7); ctx.fill();
+      ctx.strokeStyle = e.supNow || e.sup > 0 ? '#c9d0d6' : '#2a2a28'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#eef1f2'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(k.label, x, y + 4); }
+    if (e.kind !== 'sniper' && e.kind !== 'tank') drawPips(x - 10, y + 20, e.str, k.str, '#2a2a28');
+    if (e.flashT > 0){ ctx.fillStyle = '#ffd890'; ctx.beginPath(); ctx.arc(x + 12, y - 8, 6, 0, 7); ctx.fill(); }
+    if (e.sup > 0 || e.supNow){ ctx.fillStyle = '#eef1f2'; ctx.font = '8px "Special Elite", monospace'; ctx.textAlign = 'center'; ctx.fillText('nedhållen', x, y - 22); } }
+  // egna grupper som soldater
   for (const q of G.grp){ if (!q.alive) continue; const on = G.sel === q;
-    if (on){ ctx.strokeStyle = '#d6b25e'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(q.x, q.y, 22 + Math.sin(G.t * 6) * 1.5, 0, 7); ctx.stroke(); }
-    ctx.fillStyle = q.hitT > 0 ? '#9c5a3a' : '#59603a'; ctx.beginPath(); ctx.arc(q.x, q.y, 17, 0, 7); ctx.fill();
-    ctx.strokeStyle = '#2b2f1c'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = '#eef1f2'; ctx.font = '700 14px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(q.n, q.x, q.y + 5);
-    drawPips(q.x - 17, q.y + 21, q.men, q.max, '#59603a');
-    if (state === 'plan' && !q.order){ ctx.fillStyle = '#d6b25e'; ctx.beginPath(); ctx.arc(q.x + 14, q.y - 14, 5, 0, 7); ctx.fill(); }
-    if (state === 'plan' && q.order && q.order.t === 'hold'){ ctx.fillStyle = '#3f5560'; ctx.font = '8px "Special Elite", monospace'; ctx.fillText('skydd', q.x, q.y - 22); } }
-  for (const tr of G.tracers){ ctx.strokeStyle = tr.mine ? 'rgba(60,60,40,.85)' : 'rgba(200,80,40,.9)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(tr.x1, tr.y1); ctx.lineTo(tr.x2, tr.y2); ctx.stroke(); }
+    if (on){ ctx.strokeStyle = '#d6b25e'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(q.x, q.y, 25 + Math.sin(G.t * 6) * 1.5, 0, 7); ctx.stroke(); }
+    q.men.forEach(s => { if (s.alive) drawMan(s, q.hitT > 0 ? '#9c5a3a' : '#5c633c', '#474d2c', 1.55); });
+    ctx.fillStyle = '#20251c'; rr(q.x - 22, q.y - 26, q.bazooka ? 30 : 16, 13, 3); ctx.fill();
+    ctx.fillStyle = '#eef1f2'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'left'; ctx.fillText(q.n + (q.bazooka ? ' BZ' : ''), q.x - 18, q.y - 16);
+    drawPips(q.x - 17, q.y + 22, men(q), 5, '#59603a');
+    if (state === 'plan' && !q.order){ ctx.fillStyle = '#d6b25e'; ctx.beginPath(); ctx.arc(q.x + 18, q.y - 20, 5, 0, 7); ctx.fill(); }
+    if (state === 'plan' && q.order && q.order.t === 'hold'){ ctx.fillStyle = '#3f5560'; ctx.font = '8px "Special Elite", monospace'; ctx.textAlign = 'center'; ctx.fillText('skydd · spanar', q.x, q.y + 36); }
+    if (q.still >= 2 && q.c > 0 && state === 'plan'){ ctx.fillStyle = '#9b2f1e'; ctx.font = '8px "Special Elite", monospace'; ctx.textAlign = 'center'; ctx.fillText('ligger still', q.x, q.y - 30); } }
+  if (G.runner && G.runner.alive){ const R0 = G.runner, sh = groupAt(R0.c, R0.r) ? 20 : 0; const R = { ...R0, x: R0.x + sh, y: R0.y + sh * .4 }; if (G.sel === R0){ ctx.strokeStyle = '#d6b25e'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(R.x, R.y, 18, 0, 7); ctx.stroke(); }
+    drawMan({ x: R.x, y: R.y, dir: 0, run: state === 'resolve', walk: G.t * 16 }, '#6b7344', '#474d2c', 1.9);
+    ctx.fillStyle = '#20251c'; rr(R.x - 22, R.y - 24, 44, 12, 3); ctx.fill(); ctx.fillStyle = '#e9cf8a'; ctx.font = '700 9px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('SPEIRS', R.x, R.y - 15);
+    if (state === 'plan' && !R0.order){ ctx.fillStyle = '#d6b25e'; ctx.beginPath(); ctx.arc(R.x + 16, R.y - 18, 5, 0, 7); ctx.fill(); } }
+  for (const tr of G.tracers){ ctx.strokeStyle = tr.mine ? 'rgba(60,60,40,.85)' : 'rgba(200,80,40,.9)'; ctx.lineWidth = tr.big ? 3 : 1.5; ctx.beginPath(); ctx.moveTo(tr.x1, tr.y1); ctx.lineTo(tr.x2, tr.y2); ctx.stroke(); }
   for (const pt of G.parts){ ctx.globalAlpha = clamp(pt.t / pt.max, 0, 1); ctx.fillStyle = pt.c; ctx.fillRect(pt.x - pt.s / 2, pt.y - pt.s / 2, pt.s, pt.s); }
   ctx.globalAlpha = 1;
   for (const f of G.floats){ ctx.globalAlpha = clamp(f.t / .4, 0, 1); ctx.font = '700 13px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#000a'; ctx.fillText(f.txt, f.x + 1, f.y + 1); ctx.fillStyle = f.col; ctx.fillText(f.txt, f.x, f.y); }
   ctx.globalAlpha = 1;
   drawHud();
-  // snöfall
-  ctx.fillStyle = 'rgba(255,255,255,.7)';
-  for (let i = 0; i < 50; i++){ const x = (i * 173 + G.t * (20 + i % 7 * 4)) % (W + 40) - 20, y = (i * 97 + G.t * (28 + i % 5 * 6)) % (H + 20) - 10; ctx.fillRect(x, y, 1.6, 1.6); }
+  ctx.fillStyle = 'rgba(255,255,255,.7)'; const flakes = G.vis < 20 ? 140 : 50;
+  for (let i = 0; i < flakes; i++){ const x = (i * 173 + G.t * (20 + i % 7 * 4) * (G.vis < 20 ? 3 : 1)) % (W + 40) - 20, y = (i * 97 + G.t * (28 + i % 5 * 6)) % (H + 20) - 10; ctx.fillRect(x, y, 1.6, 1.6); }
 }
 function button(b, label, sub, on, enabled, col){
   ctx.fillStyle = on ? col : enabled ? '#232a31ee' : '#232a3188'; rr(b.x, b.y, b.w, b.h, 6); ctx.fill();
@@ -541,37 +740,47 @@ function button(b, label, sub, on, enabled, col){
   if (sub){ ctx.font = '9px "Special Elite", monospace'; ctx.fillText(sub, b.x + b.w / 2, b.y + b.h / 2 + 14); }
 }
 function drawHud(){
-  // överkant
   ctx.fillStyle = '#1b2026'; ctx.fillRect(0, 0, W, GY - 4);
-  ctx.textAlign = 'left'; ctx.fillStyle = '#d6b25e'; ctx.font = '700 17px Oswald, sans-serif'; ctx.fillText('ANFALL ' + G.level, 12, 22);
-  ctx.fillStyle = '#eef1f2'; ctx.font = '700 17px Oswald, sans-serif'; ctx.fillText('DRAG ' + Math.min(G.turn, G.maxTurn) + ' / ' + G.maxTurn, 100, 22);
-  ctx.fillStyle = '#d6b25e'; ctx.fillText(Math.floor(G.score) + ' p', 210, 22);
-  
-  // hjälptext
+  ctx.textAlign = 'left'; ctx.fillStyle = '#d6b25e'; ctx.font = '700 17px Oswald, sans-serif'; ctx.fillText((G.ms ? G.ms.name : 'Foy').toUpperCase(), 12, 22);
+  ctx.fillStyle = '#a3adb5'; ctx.font = '9px "Special Elite", monospace'; ctx.fillText(G.ms ? G.ms.date : '13 januari 1945', 12, 36);
+  ctx.fillStyle = '#eef1f2'; ctx.font = '700 15px Oswald, sans-serif'; ctx.fillText('DRAG ' + Math.min(G.turn, G.maxTurn) + '/' + G.maxTurn, 134, 22);
+  ctx.fillStyle = '#d6b25e'; ctx.fillText(Math.floor(G.score) + ' p', 222, 22);
   let h = '';
   if (state === 'resolve') h = 'Ordrarna genomförs…';
   else if (G.mode === 'smoke') h = 'Tryck på en ruta på fältet för att lägga rök';
-  else if (G.mode === 'art') h = 'Tryck på en tysk ställning för artilleri';
+  else if (G.mode === 'art') h = 'Tryck på en upptäckt ställning för artilleri';
   else if (G.noMove) h = 'Ni väntar på order – bara eld eller skydd';
+  else if (G.sel && G.sel === G.runner) h = 'Speirs: tryck på en ruta (högst 3 bort) – flaggan uppe till höger';
   else if (G.sel) h = ord(G.sel.n) + ' gruppen: grön ruta = gå · röd ring = skjut · tryck igen = skydd';
   else if (G.hint === 0) h = 'Tryck på en grupp vid skogsbrynet för att ge order';
   else if (G.grp.some(g => g.alive && !g.order)) h = 'Ge order till grupperna med gul prick, sedan KLAR';
   else h = 'Alla har order – tryck KLAR';
-  ctx.textAlign = 'left'; ctx.fillStyle = '#eef1f2'; ctx.font = '11px "Special Elite", monospace'; ctx.fillText(h, 290, 22, 470);
-  // knappar
+  const r0 = G.radio[0], radioOn = r0 && r0.wait <= 0;
+  if (!radioOn){ ctx.textAlign = 'left'; ctx.fillStyle = '#eef1f2'; ctx.font = '11px "Special Elite", monospace'; ctx.fillText(h, 290, 22, 470); }
   button(BTN.smoke, 'RÖK', G.smokeLeft + ' kvar', G.mode === 'smoke', G.smokeLeft > 0 && state === 'plan', '#c9d0d6');
   button(BTN.art, 'ARTILLERI', G.artTarget ? 'beställt' : G.artLeft + ' kvar', G.mode === 'art', (G.artLeft > 0 && !G.artTarget) && state === 'plan', '#c4553a');
   const ready = G.grp.every(g => !g.alive || g.order);
   button(BTN.done, 'KLAR', state === 'plan' ? (ready ? 'genomför drag' : 'resten tar skydd') : '…', ready && state === 'plan', state === 'plan', '#d6b25e');
   ctx.textAlign = 'left'; ctx.fillStyle = '#a3adb5'; ctx.font = '9px "Special Elite", monospace';
-  const alive = G.grp.filter(g => g.alive).reduce((s, g) => s + g.men, 0); ctx.fillText('MANSKAP ' + alive + ' / 15', 792, 212);
-  const left = G.en.filter(e => e.alive).length; ctx.fillText('STÄLLNINGAR ' + left, 792, 226);
-  // meddelanden
-  let ty = 140;
+  const alive = G.grp.filter(g => g.alive).reduce((s, g) => s + men(g), 0); ctx.fillText('MANSKAP ' + alive + ' / 15', 792, 208);
+  const known = G.en.filter(e => e.alive && e.seen).length, unknown = G.en.filter(e => e.alive && !e.seen).length;
+  ctx.fillText('KÄNDA FIENDER ' + known, 792, 222); ctx.fillText('OKÄNDA ' + (unknown ? '?' : '0'), 792, 236);
+  if (G.vis < 20) ctx.fillText('SNÖSTORM', 792, 250);
+  // radio i överkanten
+  if (radioOn){ const a = clamp(r0.t / .4, 0, 1) * clamp((4.6 - r0.t) / .25, 0, 1); ctx.globalAlpha = a;
+    ctx.font = '11px "Special Elite", monospace'; const lines = wrap(r0.txt, 410).slice(0, 2);
+    ctx.fillStyle = '#e9e2c8f2'; rr(278, 3, 490, 36, 4); ctx.fill(); ctx.strokeStyle = '#6c5b46'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#7a2a1e'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'left'; ctx.fillText('RADIO', 286, lines.length > 1 ? 17 : 25);
+    ctx.fillStyle = '#2a2117'; ctx.font = '11px "Special Elite", monospace'; lines.forEach((l, i) => ctx.fillText(l, 330, (lines.length > 1 ? 17 : 25) + i * 14));
+    ctx.globalAlpha = 1; }
+  let ty = 210;
   for (const t of G.toasts){ ctx.globalAlpha = clamp(t.t / .5, 0, 1); ctx.textAlign = 'center'; ctx.font = '700 15px Oswald, sans-serif';
     ctx.fillStyle = '#000c'; ctx.fillText(t.txt, 395 + 1, ty + 1); ctx.fillStyle = t.col; ctx.fillText(t.txt, 395, ty); ty += 22; }
   ctx.globalAlpha = 1;
 }
+function wrap(txt, maxW){ const words = txt.split(' '), lines = []; let line = '';
+  for (const w of words){ const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line){ lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line); return lines; }
 
 /* ============ Loop ============ */
 const portrait = () => innerHeight > innerWidth * 1.05;
@@ -604,20 +813,22 @@ async function submit(){
   else st.textContent = 'Kunde inte spara till topplistan (' + j.error + ').';
 }
 function levelDone(){
-  const L = G.level, tb = (G.maxTurn - G.turn) * 40, lb = 300 * L, mb = G.grp.reduce((s, g) => s + g.men, 0) * 20;
+  const L = G.level, tb = (G.maxTurn - G.turn) * 40, lb = 300 * L, mb = G.grp.reduce((s, g) => s + men(g), 0) * 20;
   G.score += tb + lb + mb; state = 'levelDone';
-  $('lvlTitle').textContent = L === 1 ? 'Foy är taget' : 'Anfall ' + L + ' lyckades';
+  $('lvlTitle').textContent = G.ms.done;
   $('lvlScore').textContent = Math.floor(G.score);
-  $('lvlRows').innerHTML = [['Anfallsbonus', lb], ['Drag kvar (' + (G.maxTurn - G.turn) + ')', tb], ['Manskap kvar', mb], ['Förluster detta anfall', -G.levelLost * 60]]
-    .map(([a, b]) => `<tr><td>${a}</td><td>${b >= 0 ? '+' : ''}${b}</td></tr>`).join('');
-  $('lvlFact').innerHTML = '<b>VISSTE DU?</b> ' + esc(L === 1 && G.swapped ? SWAP_FACT : FACTS[(L - 1) % FACTS.length]);
+  const rows = [['Anfallsbonus', lb], ['Drag kvar (' + (G.maxTurn - G.turn) + ')', tb], ['Manskap kvar', mb], ['Förluster', -G.levelLost * 60]];
+  if (G.runnerDone && L === 1) rows.splice(1, 0, ['Kontakt med I-kompaniet', 300]);
+  $('lvlRows').innerHTML = rows.map(([a, b]) => `<tr><td>${a}</td><td>${b >= 0 ? '+' : ''}${b}</td></tr>`).join('');
+  $('lvlFact').innerHTML = '<b>VISSTE DU?</b> ' + esc(L === 1 && G.swapped ? SWAP_FACT : L <= MISSIONS.length ? G.ms.fact : pick(FACTS));
+  const nx = missionFor(L + 1); $('nextBtn').textContent = 'Vidare mot ' + (L + 1 <= MISSIONS.length ? nx.name : 'nästa anfall');
   show('levelScreen');
 }
 function gameOver(cause){
   if (state === 'over') return;
   state = 'over'; VF.setBest(GAME, Math.floor(G.score));
   $('overTitle').textContent = cause === 'quit' ? 'Anfallen avslutade' : 'Anfallet misslyckades';
-  $('cause').textContent = cause === 'wiped' ? 'Alla grupper slogs ut på snöfältet.' : cause === 'time' ? 'Anfallet stannade av – byn togs inte innan mörkret föll.' : 'Du tog ' + (G.level) + ' anfall. Poängen är sparad.';
+  $('cause').textContent = cause === 'wiped' ? 'Alla grupper slogs ut på snöfältet utanför ' + G.ms.name + '.' : cause === 'time' ? 'Anfallet stannade av – ' + G.ms.name + ' togs inte innan mörkret föll.' : 'Du genomförde ' + G.level + ' anfall. Poängen är sparad.';
   $('finalScore').textContent = Math.floor(G.score);
   $('stLvl').textContent = G.level; $('stTaken').textContent = G.taken; $('stLost').textContent = G.lost;
   $('fact').innerHTML = '<b>VISSTE DU?</b> ' + esc(pick(FACTS)); $('fact').hidden = false;
@@ -656,8 +867,7 @@ $('muteBtn').onclick = () => { muted = !muted; lsSet('fy_muted', muted ? '1' : '
 document.addEventListener('visibilitychange', () => { if (document.hidden && (state === 'plan' || state === 'resolve')) togglePause(); });
 addEventListener('resize', resize); resize();
 // bakgrund i menyn
-newGame(); G.map = buildMap(1); G.en = buildEnemies(1); G.grp = [1, 2, 3].map((n, i) => ({ n, c: 0, r: [1, 3, 4][i], men: 5, max: 5, x: cx(0), y: cy([1, 3, 4][i]), alive: true, hitT: 0 }));
-G.turn = 1; G.maxTurn = 14; G.smokeLeft = 2; G.artLeft = 1; G.smoke = []; G.level = 1;
+newGame(); startLevel(1); state = 'menu'; show('startScreen'); G.radio = []; G.toasts = [];
 requestAnimationFrame(loop);
 </script>
 </body>

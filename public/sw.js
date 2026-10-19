@@ -1,5 +1,5 @@
 /* Västfronten – service worker: spelen fungerar utan täckning när de laddats en gång */
-const V = "vf-v3";
+const V = "vf-v4";
 const PRE = [
   "/", "/common.js", "/manifest.webmanifest", "/icon-192.png", "/apple-touch-icon.png", "/favicon-32.png",
   "/hurtgen/", "/eben-emael/", "/verdun/", "/foy/",
