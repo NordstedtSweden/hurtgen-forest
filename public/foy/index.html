@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1b2026">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>Foy 1945</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<script src="/common.js"></script>
+<style>
+/* Snö, kall skymning och olivgrönt. Ett rutnät över fältet mellan Bois Jacques och byn, ordrar till höger. */
+:root{
+  color-scheme:dark;
+  --bg:#1b2026; --panel:#232a31ee; --line:#4d5866; --text:#eef1f2; --muted:#a3adb5;
+  --accent:#d6b25e; --danger:#c4553a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);overflow:hidden;
+  font-family:"Special Elite",ui-monospace,monospace;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{display:block;position:fixed;inset:0}
+.screen{position:fixed;inset:0;display:flex;align-items:safe center;justify-content:center;padding-block:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:radial-gradient(ellipse at 50% 30%,#2e3842bb,#0e1216ee);z-index:10;overflow-y:auto}
+.screen.hidden{display:none}
+.card{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:22px 18px;box-shadow:0 10px 40px #000a;text-align:center}
+.col{min-width:0}
+h1{font-family:Oswald,sans-serif;font-weight:700;letter-spacing:.04em;margin:0;font-size:40px;line-height:1.05;text-transform:uppercase;color:var(--accent)}
+h1 small{display:block;font-size:15px;color:var(--text);letter-spacing:.3em;margin-bottom:4px}
+h2{font-family:Oswald,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px;font-size:24px}
+p{line-height:1.45;font-size:14px;color:var(--muted);margin:10px 0}
+.brief{text-align:left;font-size:13px;border-left:3px solid var(--accent);padding:4px 0 4px 10px;margin:14px 0}
+.btn{display:block;width:100%;margin:10px 0 0;padding:14px;border:1px solid var(--accent);border-radius:4px;background:var(--accent);
+  color:#1c1a12;font-family:Oswald,sans-serif;font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible,.ibtn:focus-visible,input:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+input{width:100%;padding:12px;margin-top:10px;font:inherit;font-size:17px;background:#11161b;color:var(--text);border:1px solid var(--line);border-radius:4px;text-align:center}
+.tips{text-align:left;font-size:12.5px;color:var(--muted);margin:8px 0 0;padding-left:18px}
+.tips li{margin:4px 0}
+.tips b{color:var(--text)}
+.big{font-family:Oswald,sans-serif;font-size:52px;color:var(--accent);margin:4px 0}
+.stats{display:flex;justify-content:space-around;gap:6px;font-size:13px;color:var(--muted);margin:6px 0 4px}
+.stats b{display:block;color:var(--text);font-size:18px;font-family:Oswald,sans-serif}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+td{padding:6px 4px;border-bottom:1px solid #ffffff12;text-align:left}
+td:first-child{width:34px;color:var(--muted)}
+td:last-child{text-align:right;font-family:Oswald,sans-serif;color:var(--accent);font-variant-numeric:tabular-nums}
+tr.me td{background:#d6b25e22}
+.rows td:first-child{width:auto}
+.status{font-size:13px;color:var(--muted);min-height:18px;margin-top:8px}
+#cause{color:var(--danger)}
+.fact{text-align:left;font-size:12.5px;line-height:1.45;color:var(--text);background:#00000033;border-left:3px solid var(--accent);padding:8px 10px;margin:10px 0 0}
+.fact b{color:var(--accent);font-family:Oswald,sans-serif;letter-spacing:.06em;font-weight:500}
+.back{display:inline-block;margin:0 0 8px;color:var(--muted);font-size:13px;text-decoration:none}
+.back:hover{color:var(--accent)}
+.sub{font-family:Oswald,sans-serif;letter-spacing:.12em;text-transform:uppercase;font-size:12px;color:var(--muted)}
+.rotate{display:none;font-size:12.5px;color:var(--accent);margin:12px 0 0;text-align:center}
+@media (orientation:portrait) and (pointer:coarse){ .rotate{display:block} }
+#turn{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0e1216f2;text-align:center;padding:0 24px}
+#turn .ico{font-size:54px;color:var(--accent)}
+#hudBtns{position:fixed;top:max(6px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right,0px));z-index:5;display:flex;gap:8px}
+.ibtn{width:34px;height:34px;border-radius:50%;border:1px solid #ffffff33;background:#0008;color:var(--text);font-size:14px;cursor:pointer}
+@media (orientation:landscape) and (max-height:560px){
+  .card.wide{max-width:780px;display:grid;grid-template-columns:1.1fr 1fr;gap:22px;text-align:left;padding:18px 20px;align-items:start}
+  .card.wide h1{font-size:36px}
+  .card.wide .brief{margin:10px 0 0}
+  .card.wide .tips{margin-top:0;font-size:12px}
+  .card.wide .tips li{margin:3px 0}
+  .card.wide input{text-align:left}
+  .card.wide .btn{padding:11px}
+  .card.wide .big{font-size:44px}
+  .card.wide .stats{justify-content:space-between}
+  .card.wide table{margin-top:0}
+  .card{padding:16px 18px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hudBtns" style="display:none"><button class="ibtn" id="pauseBtn" aria-label="Paus">❚❚</button><button class="ibtn" id="muteBtn" aria-label="Ljud">♪</button></div>
+<div id="turn" hidden><div class="ico">↻</div><h2>Vrid telefonen</h2><p>Foy spelas i liggande läge.</p></div>
+
+<div class="screen" id="startScreen">
+  <div class="card wide">
+   <div class="col">
+    <a class="back" href="/">← Alla spel</a>
+    <h1><small>Anfallet mot</small>Foy</h1>
+    <p class="brief">13 januari 1945, Ardennerna. Ditt kompani ligger i skogen Bois Jacques. Framför er: ett öppet snöfält och byn Foy, full av tyska ställningar. Led dina tre grupper över fältet – den som springer utan understöd kommer inte fram.</p>
+    <input id="nameInput" maxlength="16" placeholder="Ditt namn" autocomplete="nickname">
+    <button class="btn" id="playBtn">Anfall</button>
+    <button class="btn ghost" id="hsBtn">Topplista</button>
+    <p class="rotate">↻ Vrid telefonen till liggande läge – spelet är gjort för det.</p>
+   </div>
+   <div class="col">
+    <ul class="tips">
+      <li><b>Tryck på en grupp</b> och sedan på en <b>grön ruta</b> för att förflytta, eller på en <b>fiende</b> för att skjuta. Tryck på gruppen igen så tar den skydd.</li>
+      <li><b>Eld håller nere fienden.</b> En nedhållen ställning kan inte skjuta tillbaka samma drag.</li>
+      <li><b>Storma</b> en ställning genom att gå in i den från rutan bredvid – men bara om en annan grupp håller ner den samma drag.</li>
+      <li><b>Kratrar, diken och häckar</b> ger skydd. Det öppna snöfältet gör det inte.</li>
+      <li><b>RÖK</b> skymmer sikten och <b>ARTILLERI</b> slår mot en ställning. Tryck på <b>KLAR</b> när alla har fått order.</li>
+    </ul>
+   </div>
+  </div>
+</div>
+
+<div class="screen hidden" id="decideScreen">
+  <div class="card wide">
+   <div class="col">
+    <div class="sub">Mitt på snöfältet</div>
+    <h2>Anfallet har stannat</h2>
+    <p>Kompanichefen har kastat sig ner i snön och ger inga order. Grupperna ligger kvar ute på det öppna fältet och väntar. Bataljonschefen ser det från skogsbrynet.</p>
+   </div>
+   <div class="col">
+    <button class="btn" id="decideSwap">Byt chef – en ny tar befälet</button>
+    <button class="btn ghost" id="decideWait">Vänta på order</button>
+   </div>
+  </div>
+</div>
+
+<div class="screen hidden" id="levelScreen">
+  <div class="card wide">
+   <div class="col">
+    <h2 id="lvlTitle">Foy är taget</h2>
+    <div class="big" id="lvlScore">0</div>
+    <table class="rows" id="lvlRows"></table>
+   </div>
+   <div class="col">
+    <p class="fact" id="lvlFact"></p>
+    <button class="btn" id="nextBtn">Nästa anfall</button>
+    <button class="btn ghost" id="stopBtn">Avsluta och spara</button>
+   </div>
+  </div>
+</div>
+
+<div class="screen hidden" id="overScreen">
+  <div class="card wide">
+   <div class="col">
+    <h2 id="overTitle">Anfallet misslyckades</h2>
+    <p id="cause"></p>
+    <div class="big" id="finalScore">0</div>
+    <div class="stats">
+      <div><b id="stLvl">1</b>anfall</div>
+      <div><b id="stTaken">0</b>ställningar</div>
+      <div><b id="stLost">0</b>förluster</div>
+    </div>
+    <p class="fact" id="fact" hidden></p>
+   </div>
+   <div class="col">
+    <div class="status" id="submitStatus"></div>
+    <table id="overTable"></table>
+    <button class="btn" id="againBtn">Försök igen</button>
+    <button class="btn ghost" id="menuBtn">Meny</button>
+   </div>
+  </div>
+</div>
+
+<div class="screen hidden" id="hsScreen">
+  <div class="card">
+    <h2>Topplista</h2>
+    <p>Foy – de skickligaste plutonscheferna.</p>
+    <div class="status" id="hsStatus"></div>
+    <table id="hsTable"></table>
+    <button class="btn ghost" id="hsBack">Tillbaka</button>
+  </div>
+</div>
+
+<div class="screen hidden" id="pauseScreen">
+  <div class="card">
+    <h2>Paus</h2>
+    <button class="btn" id="resumeBtn">Fortsätt</button>
+    <button class="btn ghost" id="quitBtn">Avsluta</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============ Grund ============ */
+const $ = id => document.getElementById(id);
+const cvs = $('c'), ctx = cvs.getContext('2d');
+const W = 900, H = 420, GAME = 'foy';
+const COLS = 12, ROWS = 6, GX = 10, GY = 46, CW = 64, CHh = 60;
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const lsGet = k => VF.lsGet(k), lsSet = (k, v) => VF.lsSet(k, v);
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+const cx = c => GX + c * CW + CW / 2, cy = r => GY + r * CHh + CHh / 2;
+const ord = n => n + (n === 1 || n === 2 ? ':a' : ':e');
+const cheb = (a, b, c, d) => Math.max(Math.abs(a - c), Math.abs(b - d));
+const cdist = (a, b, c, d) => Math.hypot(a - c, b - d);
+
+let dpr = 1, sc = 1, ox = 0, oy = 0;
+function resize(){
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = innerWidth, h = innerHeight;
+  cvs.width = Math.round(w * dpr); cvs.height = Math.round(h * dpr);
+  cvs.style.width = w + 'px'; cvs.style.height = h + 'px';
+  sc = Math.min(cvs.width / W, cvs.height / H); ox = (cvs.width - W * sc) / 2; oy = (cvs.height - H * sc) / 2;
+}
+const toWorld = (x, y) => ({ x: (x * dpr - ox) / sc, y: (y * dpr - oy) / sc });
+
+/* ============ Ljud ============ */
+let actx = null, muted = lsGet('fy_muted') === '1';
+function audio(){ if (!actx){ try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } if (actx && actx.state === 'suspended') actx.resume(); return actx; }
+const bufs = {};
+function noiseBuf(len){ const a = audio(); const k = len + ':' + a.sampleRate; if (bufs[k]) return bufs[k]; const b = a.createBuffer(1, a.sampleRate * len, a.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return bufs[k] = b; }
+function sfxBoom(vol){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime, s = a.createBufferSource(); s.buffer = noiseBuf(1.2);
+  const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(70, t + 1);
+  const g = a.createGain(); g.gain.setValueAtTime(.5 * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + 1.1); s.connect(f).connect(g).connect(a.destination); s.start(); }
+function sfxShot(v){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime, s = a.createBufferSource(); s.buffer = noiseBuf(.15);
+  const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(2400, t); f.frequency.exponentialRampToValueAtTime(300, t + .12);
+  const g = a.createGain(); g.gain.setValueAtTime(.25 * (v || 1), t); g.gain.exponentialRampToValueAtTime(.001, t + .14); s.connect(f).connect(g).connect(a.destination); s.start(); }
+let lastRattle = 0;
+function sfxRattle(){ if (muted) return; const a = audio(); if (!a) return; const t = a.currentTime; if (t - lastRattle < .07) return; lastRattle = t;
+  const s = a.createBufferSource(); s.buffer = noiseBuf(.05); const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1700;
+  const g = a.createGain(); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .05); s.connect(f).connect(g).connect(a.destination); s.start(); }
+function beep(freq, len, vol, type){ if (muted) return; const a = audio(); if (!a) return; const o = a.createOscillator(), g = a.createGain(); o.type = type || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol || .06, a.currentTime); g.gain.exponentialRampToValueAtTime(.001, a.currentTime + len); o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + len + .02); }
+
+/* ============ Terräng ============ */
+const COVER = { forest: .14, edge: .2, open: .55, crater: .3, ditch: .28, hedge: .32, house: .12, church: .12, road: .55 };
+const TNAME = { forest: 'skog', edge: 'skogsbryn', open: 'öppen snö', crater: 'krater', ditch: 'dike', hedge: 'häck', house: 'hus', church: 'kyrka', road: 'väg' };
+const KIND = { mg: { n: 'Kulspruta', str: 3, range: 8, shots: 2, pts: 150 }, rifle: { n: 'Skyttegrupp', str: 3, range: 6, shots: 1, pts: 100 }, sniper: { n: 'Prickskytt', str: 1, range: 13, shots: 1, pts: 200 } };
+function buildMap(L){
+  const m = [];
+  for (let c = 0; c < COLS; c++){ m.push([]); for (let r = 0; r < ROWS; r++) m[c].push({ t: c === 0 ? 'forest' : 'open', seed: Math.random() }); }
+  for (let r = 0; r < ROWS; r++) if (Math.random() < .6) m[1][r].t = 'edge';
+  // dike tvärs över fältet
+  const dc = 4 + Math.floor(Math.random() * 2), dr = Math.floor(rand(0, 3)); for (let r = dr; r < dr + 3; r++) m[dc][r].t = 'ditch';
+  // kratrar
+  for (let i = 0; i < 7 - Math.min(3, L - 1); i++){ const c = 2 + Math.floor(rand(0, 6)), r = Math.floor(rand(0, ROWS)); if (m[c][r].t === 'open') m[c][r].t = 'crater'; }
+  // trädgårdar och häckar framför byn
+  for (let r = 0; r < ROWS; r++) if (Math.random() < .35) m[8][r].t = 'hedge';
+  // byn: väg N30, hus och kyrka
+  for (let r = 0; r < ROWS; r++) m[10][r].t = 'road';
+  const houses = [[9, 0], [9, 2], [9, 4], [9, 5], [11, 1], [11, 4], [11, 5], [10, 3]];
+  houses.forEach(([c, r]) => m[c][r].t = 'house');
+  m[11][2].t = 'church';
+  return m;
+}
+function buildEnemies(L){
+  const spots = [[9, 2, 'mg'], [9, 4, 'rifle'], [9, 0, 'rifle'], [10, 3, 'mg'], [11, 1, 'rifle'], [9, 5, 'rifle'], [11, 4, 'mg'], [11, 5, 'rifle']];
+  const n = Math.min(spots.length, 1 + L);
+  const list = spots.slice(0, n).map(([c, r, k], i) => ({ id: i, c, r, kind: k, str: KIND[k].str, sup: 0, supNow: false, alive: true, hitT: 0 }));
+  list.push({ id: 99, c: 11, r: 2, kind: 'sniper', str: 1, sup: 0, supNow: false, alive: true, hitT: 0 });
+  return list;
+}
+
+/* ============ Historien ============ */
+const FACTS = [
+  'Foy ligger några kilometer norr om Bastogne längs vägen mot Noville. Byn anfölls den 13 januari 1945 av amerikanska fallskärmsjägare ur 101:a luftburna divisionen.',
+  'Anfallet mot Foy gick över ett öppet snöfält från skogen Bois Jacques. Den som stannade ute på fältet var ett lätt mål.',
+  'Mitt under anfallet byttes kompanichefen för Easy Company ut. Löjtnant Ronald Speirs sprang fram över fältet, tog befälet och fick fart på anfallet igen.',
+  'Speirs sprang enligt berättelserna rakt igenom de tyska linjerna för att få kontakt med kompaniet på andra sidan byn – och sedan tillbaka.',
+  'En tysk prickskytt i Foy sköt flera amerikaner innan han själv träffades av Darrell "Shifty" Powers, en av kompaniets bästa skyttar.',
+  'Vintern 1944–45 var ovanligt kall. Många soldater i Ardennerna drabbades av förfrysningar och kylskador.',
+  'Striderna kring Foy var en del av Ardenneroffensiven, Tysklands sista stora offensiv i väst, som inleddes den 16 december 1944.',
+  'Eld och rörelse: en del av förbandet håller fienden nere med eld medan en annan del förflyttar sig. Det är grunden för allt anfall – då som nu.',
+  'Striderna i Foy skildras i tv-serien Band of Brothers, som bygger på Easy Companys väg från Normandie till krigsslutet.'
+];
+const SWAP_FACT = 'Det var just så det gick till i Foy: bataljonschefen Dick Winters skickade löjtnant Ronald Speirs att ta över Easy Company mitt i anfallet.';
+
+/* ============ Spelstatus ============ */
+let G = null, state = 'menu', lastT = 0;
+function newGame(){ G = { score: 0, level: 0, taken: 0, lost: 0, swapped: null, t: 0, parts: [], tracers: [], toasts: [], floats: [], shake: 0 }; }
+function startLevel(L){
+  G.level = L; G.map = buildMap(L); G.en = buildEnemies(L); G.turn = 1; G.maxTurn = 14;
+  G.smokeLeft = 2 + (G.swapped === true ? 1 : 0); G.artLeft = L === 1 ? 1 : 1 + (L % 2); G.smoke = []; G.artTarget = null;
+  const rows = [1, 3, 4]; G.grp = [1, 2, 3].map((n, i) => ({ n, c: 0, r: rows[i], men: 5, max: 5, order: null, x: cx(0), y: cy(rows[i]), alive: true, hitT: 0 }));
+  G.sel = null; G.mode = null; G.noMove = false; G.levelLost = 0; G.levelTaken = 0; G.hint = L === 1 ? 0 : 9;
+  G.tracers = []; G.floats = [];
+  state = 'plan'; show(null);
+  toast(L === 1 ? 'Foy, 13 januari 1945' : 'Anfall ' + L + ' – fler tyska ställningar', '#d6b25e', 3);
+}
+function toast(txt, col, t){ G.toasts.push({ txt, col: col || '#eef1f2', t: t || 2.2 }); if (G.toasts.length > 3) G.toasts.shift(); }
+function float(x, y, txt, col){ G.floats.push({ x, y, txt, col, t: 1.2 }); }
+function burst(x, y, n, cols, sp){ for (let i = 0; i < n; i++){ const a = rand(0, 6.28), v = rand(sp * .3, sp);
+  G.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: rand(.4, 1), max: 1, c: cols[i % cols.length], s: rand(1.5, 3.5) }); } }
+const enemyAt = (c, r) => G.en.find(e => e.alive && e.c === c && e.r === r);
+const groupAt = (c, r, not) => G.grp.find(g => g.alive && g !== not && g.c === c && g.r === r);
+const smokeAt = (c, r) => G.smoke.some(s => s.c === c && s.r === r && s.turns > 0);
+function los(c1, r1, c2, r2){
+  const tower = G.map[c1][r1].t === 'church' || G.map[c2][r2].t === 'church';   // kyrktornet ser över taken
+  const n = Math.ceil(cdist(c1, r1, c2, r2) * 3);
+  for (let i = 1; i < n; i++){ const k = i / n, c = Math.round(c1 + (c2 - c1) * k), r = Math.round(r1 + (r2 - r1) * k);
+    if ((c === c1 && r === r1) || (c === c2 && r === r2)) continue;
+    if (smokeAt(c, r)) return false;
+    const t = G.map[c][r].t; if (t === 'forest' || (!tower && (t === 'house' || t === 'church'))) return false; }
+  return true;
+}
+function movesFor(g){
+  const out = [];
+  if (G.noMove) return out;
+  for (let c = g.c - 2; c <= g.c + 2; c++) for (let r = g.r - 2; r <= g.r + 2; r++){
+    if (c < 0 || r < 0 || c >= COLS || r >= ROWS || (c === g.c && r === g.r)) continue;
+    if (groupAt(c, r, g)) continue;
+    const e = enemyAt(c, r), t = G.map[c][r].t;
+    if (e){ if (cheb(g.c, g.r, c, r) === 1) out.push({ c, r, assault: e }); continue; }
+    if (t === 'house' || t === 'church'){ if (cheb(g.c, g.r, c, r) > 1) continue; }
+    out.push({ c, r });
+  }
+  return out;
+}
+const fireTargets = g => G.en.filter(e => e.alive && cheb(g.c, g.r, e.c, e.r) >= 2 && cdist(g.c, g.r, e.c, e.r) <= 6.5 && los(g.c, g.r, e.c, e.r));
+
+/* ============ Inmatning ============ */
+const BTN = { smoke: { x: 790, y: 50, w: 100, h: 64 }, art: { x: 790, y: 124, w: 100, h: 64 }, done: { x: 790, y: 300, w: 100, h: 100 } };
+const inBtn = (p, b) => p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h;
+function tap(p){
+  if (state !== 'plan') return;
+  audio();
+  if (inBtn(p, BTN.done)) return endTurn();
+  if (inBtn(p, BTN.smoke)){ if (G.smokeLeft > 0){ G.mode = G.mode === 'smoke' ? null : 'smoke'; G.sel = null; beep(500, .06, .05); } else toast('Ingen rök kvar', '#a3adb5'); return; }
+  if (inBtn(p, BTN.art)){ if (G.artLeft > 0 && !G.artTarget){ G.mode = G.mode === 'art' ? null : 'art'; G.sel = null; beep(400, .06, .05); } else toast(G.artTarget ? 'Artilleriet är redan beställt' : 'Inget artilleri kvar', '#a3adb5'); return; }
+  const c = Math.floor((p.x - GX) / CW), r = Math.floor((p.y - GY) / CHh);
+  if (c < 0 || r < 0 || c >= COLS || r >= ROWS) return;
+  if (G.mode === 'smoke'){
+    if (c < 1 || c > 9){ toast('Lägg röken ute på fältet', '#a3adb5'); return; }
+    for (let k = -1; k <= 1; k++) if (r + k >= 0 && r + k < ROWS) G.smoke.push({ c, r: r + k, turns: 2 });
+    G.smokeLeft--; G.mode = null; beep(300, .2, .05, 'triangle'); toast('Rök läggs ut', '#c9d0d6');
+    for (const g of G.grp) if (g.order && g.order.t === 'fire' && !los(g.c, g.r, g.order.e.c, g.order.e.r)) g.order = null;
+    return;
+  }
+  if (G.mode === 'art'){
+    const e = enemyAt(c, r); if (!e){ toast('Tryck på en tysk ställning', '#a3adb5'); return; }
+    G.artTarget = e; G.artLeft--; G.mode = null; beep(250, .25, .06, 'triangle'); toast('Artilleri beställt mot ' + KIND[e.kind].n.toLowerCase(), '#e9cf8a'); return;
+  }
+  const g0 = groupAt(c, r);
+  if (g0){
+    if (G.sel === g0){ g0.order = { t: 'hold' }; G.sel = null; beep(520, .05, .05); }
+    else { G.sel = g0; beep(640, .05, .05); if (G.hint < 1) G.hint = 1; }
+    return;
+  }
+  const g = G.sel; if (!g) return;
+  const e = enemyAt(c, r);
+  if (e){
+    if (cheb(g.c, g.r, c, r) === 1 && !G.noMove){ g.order = { t: 'assault', e, c, r }; G.sel = null; beep(800, .08, .06); next(); return; }
+    if (fireTargets(g).includes(e)){ g.order = { t: 'fire', e }; G.sel = null; beep(760, .06, .05); if (G.hint < 3) G.hint = 3; next(); return; }
+    toast(cheb(g.c, g.r, c, r) <= 1 ? 'För nära för att skjuta' : 'Ingen fri sikt eller för långt', '#a3adb5'); return;
+  }
+  const mv = movesFor(g).find(m => m.c === c && m.r === r && !m.assault);
+  if (mv && G.grp.some(q => q !== g && q.alive && q.order && (q.order.t === 'move' || q.order.t === 'assault') && q.order.c === c && q.order.r === r)){ toast('En annan grupp går redan dit', '#a3adb5'); return; }
+  if (mv){ g.order = { t: 'move', c, r }; G.sel = null; beep(700, .06, .05); if (G.hint < 2) G.hint = 2; next(); return; }
+  G.sel = null;
+}
+function next(){ const n = G.grp.find(g => g.alive && !g.order); if (n) G.sel = n; }
+cvs.addEventListener('touchstart', e => { e.preventDefault(); for (const t of e.changedTouches) tap(toWorld(t.clientX, t.clientY)); }, { passive: false });
+cvs.addEventListener('mousedown', e => tap(toWorld(e.clientX, e.clientY)));
+addEventListener('keydown', e => { if (e.code === 'Escape' || e.code === 'KeyP') togglePause(); if (e.code === 'Enter' && state === 'plan') endTurn(); });
+
+/* ============ Dragets genomförande ============ */
+let Q = [];   // tidsatta händelser under genomförandet
+function at(t, fn){ Q.push({ t, fn }); }
+function endTurn(){
+  if (state !== 'plan') return;
+  state = 'resolve'; G.sel = null; G.mode = null; G.rt = 0; Q = [];
+  const turnLost0 = G.levelLost;
+  let tt = .1;
+  // 1. artilleri
+  if (G.artTarget && G.artTarget.alive){ const e = G.artTarget;
+    at(tt, () => { sfxBoom(1); G.shake = 10; burst(cx(e.c), cy(e.r), 40, ['#e8a24a', '#f4d27a', '#6b6658', '#2a2a28'], 220); e.str -= 1; e.sup = 2; e.supNow = true; e.hitT = .4; float(cx(e.c), cy(e.r) - 20, '-1', '#e9cf8a'); if (e.str <= 0) kill(e, null); });
+    tt += .6; }
+  G.artTarget = null;
+  // 2. egen eld
+  for (const g of G.grp){ if (!g.alive || !g.order || g.order.t !== 'fire') continue; const e = g.order.e; if (!e.alive) continue;
+    const gg = g; at(tt, () => {
+      if (!e.alive) return; e.supNow = true;
+      const d = cdist(gg.c, gg.r, e.c, e.r), p = clamp(.12 + gg.men * .05 + (d <= 2.5 ? .12 : 0) - d * .02, .08, .55);
+      for (let k = 0; k < 5; k++) setTimeout(() => { sfxShot(.5); G.tracers.push({ x1: cx(gg.c), y1: cy(gg.r), x2: cx(e.c) + rand(-14, 14), y2: cy(e.r) + rand(-12, 12), t: .08, mine: true }); }, k * 70);
+      if (Math.random() < p){ e.str--; e.hitT = .4; float(cx(e.c), cy(e.r) - 20, '-1', '#e9cf8a'); if (e.str <= 0) kill(e, gg); }
+      else float(cx(e.c), cy(e.r) - 20, 'NEDHÅLLEN', '#c9d0d6');
+    }); tt += .35; }
+  tt += .2;
+  // 3. förflyttning och storm
+  at(tt, () => {
+    for (const g of G.grp){ if (!g.alive || !g.order) continue;
+      if (g.order.t === 'move'){ g.c = g.order.c; g.r = g.order.r; }
+      if (g.order.t === 'assault'){ const e = g.order.e;
+        if (!e.alive || e.supNow || e.sup > 0){ if (e.alive) kill(e, g, true); g.c = g.order.c; g.r = g.order.r; }
+        else { const loss = Math.min(g.men, 2); hit(g, loss); toast('Stormningen slogs tillbaka – ställningen var inte nedhållen', '#e06a4a', 2.6); } } }
+  });
+  tt += .7;
+  // 4. tysk eld
+  const shooters = G.en.slice();
+  at(tt, () => {
+    let delay = 0;
+    for (const e of shooters){
+      if (!e.alive || e.supNow || e.sup > 0) continue;
+      if (e.kind === 'sniper' && G.turn % 2 === 0) continue;
+      const k = KIND[e.kind];
+      const vis = G.grp.filter(g => g.alive && cdist(g.c, g.r, e.c, e.r) <= k.range && los(e.c, e.r, g.c, g.r));
+      if (!vis.length) continue;
+      const tgt = e.kind === 'sniper' ? pick(vis) : vis.reduce((a, b) => cdist(a.c, a.r, e.c, e.r) <= cdist(b.c, b.r, e.c, e.r) ? a : b);
+      for (let s = 0; s < k.shots; s++){
+        const dd = delay; delay += .28;
+        setTimeout(() => {
+          if (!tgt.alive || state === 'over') return;
+          const t = G.map[tgt.c][tgt.r].t, d = cdist(tgt.c, tgt.r, e.c, e.r);
+          let p = COVER[t] * (1 - Math.max(0, d - 3) * .05);
+          if (e.kind === 'sniper') p = t === 'open' || t === 'road' ? .42 : .2;
+          if (e.kind === 'mg') sfxRattle(); else sfxShot(e.kind === 'sniper' ? 1.1 : .7);
+          for (let k2 = 0; k2 < (e.kind === 'mg' ? 4 : 1); k2++) G.tracers.push({ x1: cx(e.c), y1: cy(e.r), x2: cx(tgt.c) + rand(-14, 14), y2: cy(tgt.r) + rand(-12, 12), t: .1 });
+          if (Math.random() < p){ hit(tgt, 1); if (e.kind === 'sniper' && !G.sniperWarned){ G.sniperWarned = true; toast('Prickskytt i kyrktornet!', '#e06a4a', 2.6); } }
+        }, dd * 1000);
+      }
+    }
+    G.lastDelay = delay;
+  });
+  tt += .2;
+  at(tt, () => { at(G.rt + (G.lastDelay || 0) + .6, () => finishTurn(turnLost0)); });
+}
+function hit(g, n){ g.men -= n; g.hitT = .5; G.lost += n; G.levelLost += n; G.score = Math.max(0, G.score - 60 * n); float(g.x, g.y - 22, '-' + n, '#e06a4a'); if (navigator.vibrate) navigator.vibrate(30);
+  if (g.men <= 0){ g.alive = false; g.men = 0; toast(ord(g.n) + ' gruppen är utslagen', '#e06a4a', 2.4); } }
+function kill(e, g, assault){
+  e.alive = false; e.str = 0; G.taken++; G.levelTaken++; const pts = KIND[e.kind].pts; G.score += pts;
+  burst(cx(e.c), cy(e.r), 26, ['#8a8a80', '#4a4a44', '#e8e2d0'], 140); sfxBoom(.4);
+  toast((assault ? 'Stormad: ' : 'Utslagen: ') + KIND[e.kind].n.toLowerCase() + ' +' + pts, '#e9cf8a', 2);
+}
+function finishTurn(){
+  for (const e of G.en){ e.sup = Math.max(0, e.sup - 1); e.supNow = false; }
+  for (const s of G.smoke) s.turns--; G.smoke = G.smoke.filter(s => s.turns > 0);
+  for (const g of G.grp) g.order = null;
+  G.noMove = false;
+  if (G.en.every(e => !e.alive)) return levelDone();
+  if (G.grp.every(g => !g.alive)) return gameOver('wiped');
+  G.turn++;
+  if (G.turn > G.maxTurn) return gameOver('time');
+  if (G.level === 1 && G.turn === 3 && G.swapped === null){ state = 'decide'; show('decideScreen'); return; }
+  state = 'plan'; next();
+}
+function decide(swap){
+  G.swapped = swap; show(null); state = 'plan';
+  if (swap){ G.score += 200; G.smokeLeft++; toast('Ny chef tar befälet – anfallet fortsätter! +1 rök', '#e9cf8a', 3.2); }
+  else { G.noMove = true; toast('Ni väntar på order – ingen grupp kan förflytta sig detta drag', '#e06a4a', 3.4); }
+  next();
+}
+function updAnim(dt){
+  if (state === 'resolve'){ G.rt += dt; Q.sort((a, b) => a.t - b.t); while (Q.length && Q[0].t <= G.rt){ const q = Q.shift(); q.fn(); } }
+  for (const g of G.grp){ const tx = cx(g.c), ty = cy(g.r); g.x += (tx - g.x) * Math.min(1, dt * 6); g.y += (ty - g.y) * Math.min(1, dt * 6); g.hitT = Math.max(0, g.hitT - dt); }
+  for (const e of G.en) e.hitT = Math.max(0, e.hitT - dt);
+  for (const pt of G.parts){ pt.t -= dt; pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vx *= .92; pt.vy *= .92; }
+  G.parts = G.parts.filter(pt => pt.t > 0);
+  for (const tr of G.tracers) tr.t -= dt; G.tracers = G.tracers.filter(t => t.t > 0);
+  for (const t of G.toasts) t.t -= dt; G.toasts = G.toasts.filter(t => t.t > 0);
+  for (const f of G.floats){ f.t -= dt; f.y -= 14 * dt; } G.floats = G.floats.filter(f => f.t > 0);
+  G.shake = Math.max(0, G.shake - 30 * dt); G.t += dt;
+}
+
+/* ============ Ritning ============ */
+function rr(x, y, w, h, r){ ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function drawCell(c, r, cell){
+  const x = GX + c * CW, y = GY + r * CHh, t = cell.t;
+  ctx.fillStyle = t === 'forest' ? '#2c3a30' : t === 'edge' ? '#c9d3da' : t === 'road' ? '#b9c0c4' : '#dfe6ea';
+  ctx.fillRect(x, y, CW, CHh);
+  if (t === 'forest' || t === 'edge'){
+    const n = t === 'forest' ? 4 : 2;
+    for (let i = 0; i < n; i++){ const tx = x + 10 + ((cell.seed * 97 + i * 37) % (CW - 20)), ty = y + 14 + ((cell.seed * 53 + i * 23) % (CHh - 22)), s = 9 + (i % 2) * 3;
+      ctx.fillStyle = '#1d2a22'; ctx.beginPath(); ctx.moveTo(tx, ty - s * 1.6); ctx.lineTo(tx + s * .8, ty + s * .4); ctx.lineTo(tx - s * .8, ty + s * .4); ctx.fill();
+      ctx.fillStyle = '#eef3f5'; ctx.beginPath(); ctx.moveTo(tx, ty - s * 1.6); ctx.lineTo(tx + s * .35, ty - s * .7); ctx.lineTo(tx - s * .35, ty - s * .7); ctx.fill(); }
+  } else if (t === 'crater'){ ctx.fillStyle = '#8f989e'; ctx.beginPath(); ctx.ellipse(x + CW / 2, y + CHh / 2, 18, 12, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#5f676c'; ctx.beginPath(); ctx.ellipse(x + CW / 2, y + CHh / 2 + 2, 12, 7, 0, 0, 7); ctx.fill(); }
+  else if (t === 'ditch'){ ctx.fillStyle = '#a7b2b9'; ctx.fillRect(x + CW / 2 - 9, y, 18, CHh); ctx.fillStyle = '#7f8b92'; ctx.fillRect(x + CW / 2 - 4, y, 8, CHh); }
+  else if (t === 'hedge'){ ctx.fillStyle = '#5b6a58'; for (let i = 0; i < 5; i++){ ctx.beginPath(); ctx.arc(x + 8 + i * 12, y + CHh / 2 + Math.sin(i) * 3, 7, 0, 7); ctx.fill(); } ctx.fillStyle = '#eef3f5'; for (let i = 0; i < 5; i++) ctx.fillRect(x + 4 + i * 12, y + CHh / 2 - 7, 8, 2.5); }
+  else if (t === 'house' || t === 'church'){
+    ctx.fillStyle = '#5b5a56'; ctx.fillRect(x + 8, y + 10, CW - 16, CHh - 18);
+    ctx.fillStyle = '#f1f4f6'; ctx.fillRect(x + 5, y + 7, CW - 10, 10);
+    ctx.fillStyle = '#2a2a28'; ctx.fillRect(x + 16, y + 26, 8, 8); ctx.fillRect(x + CW - 24, y + 26, 8, 8);
+    if (t === 'church'){ ctx.fillStyle = '#4b4a46'; ctx.fillRect(x + CW / 2 - 7, y - 6, 14, 22); ctx.fillStyle = '#f1f4f6'; ctx.beginPath(); ctx.moveTo(x + CW / 2 - 9, y - 4); ctx.lineTo(x + CW / 2, y - 16); ctx.lineTo(x + CW / 2 + 9, y - 4); ctx.fill(); }
+  } else if (t === 'road'){ ctx.strokeStyle = 'rgba(120,128,132,.6)'; ctx.lineWidth = 2; ctx.setLineDash([6, 8]); ctx.beginPath(); ctx.moveTo(x + CW / 2, y); ctx.lineTo(x + CW / 2, y + CHh); ctx.stroke(); ctx.setLineDash([]); }
+  ctx.strokeStyle = 'rgba(60,72,82,.18)'; ctx.lineWidth = 1; ctx.strokeRect(x + .5, y + .5, CW - 1, CHh - 1);
+}
+function drawPips(x, y, n, max, col){ for (let i = 0; i < max; i++){ ctx.fillStyle = i < n ? col : 'rgba(0,0,0,.35)'; ctx.fillRect(x + i * 7, y, 5, 5); } }
+function render(){
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#12171c'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+  if (!G || !G.map) return;
+  const sx = (Math.random() - .5) * G.shake, sy = (Math.random() - .5) * G.shake;
+  ctx.setTransform(sc, 0, 0, sc, ox + sx * sc, oy + sy * sc);
+  ctx.fillStyle = '#1b2026'; ctx.fillRect(-400, -400, W + 800, H + 800);
+  for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) drawCell(c, r, G.map[c][r]);
+  ctx.fillStyle = 'rgba(30,36,42,.55)'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#a3adb5'; ctx.fillText('BOIS JACQUES', cx(0) + 6, GY - 6); ctx.fillText('S N Ö F Ä L T E T', cx(5), GY - 6); ctx.fillText('F O Y', cx(10), GY - 6);
+  // rök
+  for (const s of G.smoke){ const x = cx(s.c), y = cy(s.r);
+    for (let i = 0; i < 4; i++){ ctx.fillStyle = `rgba(235,238,240,${.35 + .15 * s.turns})`; ctx.beginPath(); ctx.arc(x - 14 + i * 10 + Math.sin(G.t + i) * 3, y - 6 + (i % 2) * 10, 16, 0, 7); ctx.fill(); } }
+  // markeringar för vald grupp
+  const g = G.sel;
+  if (state === 'plan' && g){
+    for (const m of movesFor(g)){ const x = GX + m.c * CW, y = GY + m.r * CHh;
+      if (m.assault){ ctx.strokeStyle = 'rgba(214,178,94,.95)'; ctx.lineWidth = 3; ctx.strokeRect(x + 3, y + 3, CW - 6, CHh - 6); ctx.fillStyle = '#7a5a10'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('STORMA', x + CW / 2, y + CHh - 6); }
+      else { ctx.fillStyle = cheb(g.c, g.r, m.c, m.r) === 2 ? 'rgba(90,160,90,.22)' : 'rgba(90,160,90,.35)'; ctx.fillRect(x + 2, y + 2, CW - 4, CHh - 4);
+        ctx.fillStyle = 'rgba(40,70,40,.7)'; ctx.font = '9px "Special Elite", monospace'; ctx.textAlign = 'center'; ctx.fillText(TNAME[G.map[m.c][m.r].t], x + CW / 2, y + CHh - 6); } }
+    for (const e of fireTargets(g)){ ctx.strokeStyle = 'rgba(200,60,40,.9)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(cx(e.c), cy(e.r), 24, 0, 7); ctx.stroke();
+      ctx.fillStyle = '#9b2f1e'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('SKJUT', cx(e.c), cy(e.r) + 36); }
+  }
+  if (state === 'plan' && G.mode){ ctx.fillStyle = G.mode === 'smoke' ? 'rgba(255,255,255,.18)' : 'rgba(200,60,40,.12)'; ctx.fillRect(GX + (G.mode === 'smoke' ? CW : 0), GY, (G.mode === 'smoke' ? 9 : 12) * CW, ROWS * CHh); }
+  // ordrar
+  for (const q of G.grp){ if (!q.alive || !q.order || state !== 'plan') continue; const o = q.order;
+    ctx.lineWidth = 3; ctx.setLineDash(o.t === 'fire' ? [5, 5] : []);
+    if (o.t === 'move' || o.t === 'assault'){ ctx.strokeStyle = o.t === 'assault' ? '#d6b25e' : '#3f7a3f'; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(cx(o.c), cy(o.r)); ctx.stroke();
+      ctx.setLineDash([]); const a = Math.atan2(cy(o.r) - q.y, cx(o.c) - q.x); ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.moveTo(cx(o.c), cy(o.r)); ctx.lineTo(cx(o.c) - Math.cos(a - .4) * 12, cy(o.r) - Math.sin(a - .4) * 12); ctx.lineTo(cx(o.c) - Math.cos(a + .4) * 12, cy(o.r) - Math.sin(a + .4) * 12); ctx.fill(); }
+    if (o.t === 'fire'){ ctx.strokeStyle = '#b5452f'; ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(cx(o.e.c), cy(o.e.r)); ctx.stroke(); }
+    ctx.setLineDash([]); }
+  if (G.artTarget){ const e = G.artTarget; ctx.strokeStyle = `rgba(200,60,40,${.5 + .4 * Math.sin(G.t * 8)})`; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(cx(e.c), cy(e.r), 30, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+  // tyska ställningar
+  for (const e of G.en){ if (!e.alive) continue; const x = cx(e.c), y = cy(e.r) + 4, k = KIND[e.kind];
+    ctx.fillStyle = e.hitT > 0 ? '#9c5a3a' : e.kind === 'sniper' ? '#4c5148' : '#6a6f68'; ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.fill();
+    ctx.strokeStyle = e.supNow || e.sup > 0 ? '#c9d0d6' : '#2a2a28'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#eef1f2'; ctx.font = '700 10px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(e.kind === 'mg' ? 'KSP' : e.kind === 'sniper' ? '⌖' : 'GRP', x, y + 4);
+    if (e.kind !== 'sniper') drawPips(x - 10, y + 19, e.str, k.str, '#2a2a28');
+    if (e.sup > 0 || e.supNow){ ctx.fillStyle = '#eef1f2'; ctx.font = '8px "Special Elite", monospace'; ctx.fillText('nedhållen', x, y - 21); } }
+  // egna grupper
+  for (const q of G.grp){ if (!q.alive) continue; const on = G.sel === q;
+    if (on){ ctx.strokeStyle = '#d6b25e'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(q.x, q.y, 22 + Math.sin(G.t * 6) * 1.5, 0, 7); ctx.stroke(); }
+    ctx.fillStyle = q.hitT > 0 ? '#9c5a3a' : '#59603a'; ctx.beginPath(); ctx.arc(q.x, q.y, 17, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#2b2f1c'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#eef1f2'; ctx.font = '700 14px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(q.n, q.x, q.y + 5);
+    drawPips(q.x - 17, q.y + 21, q.men, q.max, '#59603a');
+    if (state === 'plan' && !q.order){ ctx.fillStyle = '#d6b25e'; ctx.beginPath(); ctx.arc(q.x + 14, q.y - 14, 5, 0, 7); ctx.fill(); }
+    if (state === 'plan' && q.order && q.order.t === 'hold'){ ctx.fillStyle = '#3f5560'; ctx.font = '8px "Special Elite", monospace'; ctx.fillText('skydd', q.x, q.y - 22); } }
+  for (const tr of G.tracers){ ctx.strokeStyle = tr.mine ? 'rgba(60,60,40,.85)' : 'rgba(200,80,40,.9)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(tr.x1, tr.y1); ctx.lineTo(tr.x2, tr.y2); ctx.stroke(); }
+  for (const pt of G.parts){ ctx.globalAlpha = clamp(pt.t / pt.max, 0, 1); ctx.fillStyle = pt.c; ctx.fillRect(pt.x - pt.s / 2, pt.y - pt.s / 2, pt.s, pt.s); }
+  ctx.globalAlpha = 1;
+  for (const f of G.floats){ ctx.globalAlpha = clamp(f.t / .4, 0, 1); ctx.font = '700 13px Oswald, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#000a'; ctx.fillText(f.txt, f.x + 1, f.y + 1); ctx.fillStyle = f.col; ctx.fillText(f.txt, f.x, f.y); }
+  ctx.globalAlpha = 1;
+  drawHud();
+  // snöfall
+  ctx.fillStyle = 'rgba(255,255,255,.7)';
+  for (let i = 0; i < 50; i++){ const x = (i * 173 + G.t * (20 + i % 7 * 4)) % (W + 40) - 20, y = (i * 97 + G.t * (28 + i % 5 * 6)) % (H + 20) - 10; ctx.fillRect(x, y, 1.6, 1.6); }
+}
+function button(b, label, sub, on, enabled, col){
+  ctx.fillStyle = on ? col : enabled ? '#232a31ee' : '#232a3188'; rr(b.x, b.y, b.w, b.h, 6); ctx.fill();
+  ctx.strokeStyle = enabled ? col : '#4d5866'; ctx.lineWidth = on ? 3 : 1.5; ctx.stroke();
+  ctx.textAlign = 'center'; ctx.fillStyle = on ? '#1c1a12' : enabled ? '#eef1f2' : '#77818a'; ctx.font = '700 15px Oswald, sans-serif'; ctx.fillText(label, b.x + b.w / 2, b.y + b.h / 2 + (sub ? -2 : 5));
+  if (sub){ ctx.font = '9px "Special Elite", monospace'; ctx.fillText(sub, b.x + b.w / 2, b.y + b.h / 2 + 14); }
+}
+function drawHud(){
+  // överkant
+  ctx.fillStyle = '#1b2026'; ctx.fillRect(0, 0, W, GY - 4);
+  ctx.textAlign = 'left'; ctx.fillStyle = '#d6b25e'; ctx.font = '700 17px Oswald, sans-serif'; ctx.fillText('ANFALL ' + G.level, 12, 22);
+  ctx.fillStyle = '#eef1f2'; ctx.font = '700 17px Oswald, sans-serif'; ctx.fillText('DRAG ' + Math.min(G.turn, G.maxTurn) + ' / ' + G.maxTurn, 100, 22);
+  ctx.fillStyle = '#d6b25e'; ctx.fillText(Math.floor(G.score) + ' p', 210, 22);
+  
+  // hjälptext
+  let h = '';
+  if (state === 'resolve') h = 'Ordrarna genomförs…';
+  else if (G.mode === 'smoke') h = 'Tryck på en ruta på fältet för att lägga rök';
+  else if (G.mode === 'art') h = 'Tryck på en tysk ställning för artilleri';
+  else if (G.noMove) h = 'Ni väntar på order – bara eld eller skydd';
+  else if (G.sel) h = ord(G.sel.n) + ' gruppen: grön ruta = gå · röd ring = skjut · tryck igen = skydd';
+  else if (G.hint === 0) h = 'Tryck på en grupp vid skogsbrynet för att ge order';
+  else if (G.grp.some(g => g.alive && !g.order)) h = 'Ge order till grupperna med gul prick, sedan KLAR';
+  else h = 'Alla har order – tryck KLAR';
+  ctx.textAlign = 'left'; ctx.fillStyle = '#eef1f2'; ctx.font = '11px "Special Elite", monospace'; ctx.fillText(h, 290, 22, 470);
+  // knappar
+  button(BTN.smoke, 'RÖK', G.smokeLeft + ' kvar', G.mode === 'smoke', G.smokeLeft > 0 && state === 'plan', '#c9d0d6');
+  button(BTN.art, 'ARTILLERI', G.artTarget ? 'beställt' : G.artLeft + ' kvar', G.mode === 'art', (G.artLeft > 0 && !G.artTarget) && state === 'plan', '#c4553a');
+  const ready = G.grp.every(g => !g.alive || g.order);
+  button(BTN.done, 'KLAR', state === 'plan' ? (ready ? 'genomför drag' : 'resten tar skydd') : '…', ready && state === 'plan', state === 'plan', '#d6b25e');
+  ctx.textAlign = 'left'; ctx.fillStyle = '#a3adb5'; ctx.font = '9px "Special Elite", monospace';
+  const alive = G.grp.filter(g => g.alive).reduce((s, g) => s + g.men, 0); ctx.fillText('MANSKAP ' + alive + ' / 15', 792, 212);
+  const left = G.en.filter(e => e.alive).length; ctx.fillText('STÄLLNINGAR ' + left, 792, 226);
+  // meddelanden
+  let ty = 140;
+  for (const t of G.toasts){ ctx.globalAlpha = clamp(t.t / .5, 0, 1); ctx.textAlign = 'center'; ctx.font = '700 15px Oswald, sans-serif';
+    ctx.fillStyle = '#000c'; ctx.fillText(t.txt, 395 + 1, ty + 1); ctx.fillStyle = t.col; ctx.fillText(t.txt, 395, ty); ty += 22; }
+  ctx.globalAlpha = 1;
+}
+
+/* ============ Loop ============ */
+const portrait = () => innerHeight > innerWidth * 1.05;
+function loop(t){
+  const dt = Math.min(.05, (t - lastT) / 1000 || 0); lastT = t;
+  const playing = state === 'plan' || state === 'resolve'; const turn = playing && portrait(); $('turn').hidden = !turn;
+  if (G && G.map && !turn && state !== 'paused') updAnim(dt);
+  render(); requestAnimationFrame(loop);
+}
+
+/* ============ Skärmar & topplista ============ */
+const screens = ['startScreen', 'decideScreen', 'levelScreen', 'overScreen', 'hsScreen', 'pauseScreen'];
+function show(id){ for (const s of screens) $(s).classList.toggle('hidden', s !== id); $('hudBtns').style.display = id ? 'none' : 'flex'; }
+let lastTs = null;
+function renderTable(el, list, meTs){
+  if (!list || !list.length){ el.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#a3adb5">Ingen har kommit med på listan ännu. Bli först!</td></tr>'; return; }
+  el.innerHTML = list.map((s, i) => `<tr class="${s.ts === meTs ? 'me' : ''}"><td>${i + 1}.</td><td>${esc(s.name)}</td><td>${s.score}</td></tr>`).join('');
+}
+async function loadHs(){
+  $('hsStatus').textContent = 'Hämtar…'; $('hsTable').innerHTML = '';
+  try { const j = await VF.load(GAME); $('hsStatus').textContent = VF.pending() ? 'Dina sparade resultat skickas när du har täckning.' : ''; renderTable($('hsTable'), j.scores, lastTs); }
+  catch(e){ $('hsStatus').textContent = 'Ingen täckning just nu – topplistan visas när du är uppkopplad.'; }
+}
+async function submit(){
+  const name = ($('nameInput').value || '').trim().slice(0, 16) || 'Okänd soldat';
+  const st = $('submitStatus'); st.textContent = 'Rapporterar till högkvarteret…'; $('overTable').innerHTML = '';
+  const j = await VF.submit(GAME, { name, score: Math.floor(G.score), level: G.level, taken: G.taken, lost: G.lost, duration: Math.max(1, Math.round(G.t)) });
+  if (j.ok){ lastTs = j.ts; st.textContent = j.rank ? `Du är på plats ${j.rank}!` : 'Poängen är sparad.'; renderTable($('overTable'), j.scores.slice(0, 10), j.ts); }
+  else if (j.queued) st.textContent = 'Ingen täckning – poängen skickas automatiskt när du är uppkopplad igen.';
+  else st.textContent = 'Kunde inte spara till topplistan (' + j.error + ').';
+}
+function levelDone(){
+  const L = G.level, tb = (G.maxTurn - G.turn) * 40, lb = 300 * L, mb = G.grp.reduce((s, g) => s + g.men, 0) * 20;
+  G.score += tb + lb + mb; state = 'levelDone';
+  $('lvlTitle').textContent = L === 1 ? 'Foy är taget' : 'Anfall ' + L + ' lyckades';
+  $('lvlScore').textContent = Math.floor(G.score);
+  $('lvlRows').innerHTML = [['Anfallsbonus', lb], ['Drag kvar (' + (G.maxTurn - G.turn) + ')', tb], ['Manskap kvar', mb], ['Förluster detta anfall', -G.levelLost * 60]]
+    .map(([a, b]) => `<tr><td>${a}</td><td>${b >= 0 ? '+' : ''}${b}</td></tr>`).join('');
+  $('lvlFact').innerHTML = '<b>VISSTE DU?</b> ' + esc(L === 1 && G.swapped ? SWAP_FACT : FACTS[(L - 1) % FACTS.length]);
+  show('levelScreen');
+}
+function gameOver(cause){
+  if (state === 'over') return;
+  state = 'over'; VF.setBest(GAME, Math.floor(G.score));
+  $('overTitle').textContent = cause === 'quit' ? 'Anfallen avslutade' : 'Anfallet misslyckades';
+  $('cause').textContent = cause === 'wiped' ? 'Alla grupper slogs ut på snöfältet.' : cause === 'time' ? 'Anfallet stannade av – byn togs inte innan mörkret föll.' : 'Du tog ' + (G.level) + ' anfall. Poängen är sparad.';
+  $('finalScore').textContent = Math.floor(G.score);
+  $('stLvl').textContent = G.level; $('stTaken').textContent = G.taken; $('stLost').textContent = G.lost;
+  $('fact').innerHTML = '<b>VISSTE DU?</b> ' + esc(pick(FACTS)); $('fact').hidden = false;
+  setTimeout(() => { show('overScreen'); submit(); }, cause === 'quit' ? 0 : 900);
+}
+function tryLandscape(){
+  if (!matchMedia('(pointer:coarse)').matches) return;
+  try { const el = document.documentElement, fs = el.requestFullscreen && !document.fullscreenElement ? el.requestFullscreen() : Promise.resolve();
+    Promise.resolve(fs).then(() => screen.orientation && screen.orientation.lock ? screen.orientation.lock('landscape') : null).catch(() => {}); } catch(e){}
+}
+function start(){
+  const n = $('nameInput').value.trim(); if (!n){ $('nameInput').focus(); $('nameInput').placeholder = 'Skriv ditt namn först'; return; }
+  lsSet('vf_name', n); audio(); tryLandscape(); newGame(); startLevel(1);
+}
+let pausedFrom = null;
+function togglePause(){
+  if (state === 'plan' || state === 'resolve'){ pausedFrom = state; state = 'paused'; show('pauseScreen'); }
+  else if (state === 'paused'){ state = pausedFrom; show(null); lastT = performance.now(); }
+}
+$('nameInput').value = lsGet('vf_name') || lsGet('hf_name') || '';
+$('playBtn').onclick = start;
+$('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') start(); });
+$('decideSwap').onclick = () => decide(true);
+$('decideWait').onclick = () => decide(false);
+$('nextBtn').onclick = () => startLevel(G.level + 1);
+$('stopBtn').onclick = () => gameOver('quit');
+$('againBtn').onclick = () => { newGame(); startLevel(1); };
+$('menuBtn').onclick = () => { state = 'menu'; show('startScreen'); };
+$('hsBtn').onclick = () => { show('hsScreen'); loadHs(); };
+$('hsBack').onclick = () => show('startScreen');
+$('pauseBtn').onclick = togglePause;
+$('resumeBtn').onclick = togglePause;
+$('quitBtn').onclick = () => { state = 'menu'; show('startScreen'); };
+const updMute = () => { $('muteBtn').style.opacity = muted ? .4 : 1; };
+$('muteBtn').onclick = () => { muted = !muted; lsSet('fy_muted', muted ? '1' : '0'); updMute(); }; updMute();
+document.addEventListener('visibilitychange', () => { if (document.hidden && (state === 'plan' || state === 'resolve')) togglePause(); });
+addEventListener('resize', resize); resize();
+// bakgrund i menyn
+newGame(); G.map = buildMap(1); G.en = buildEnemies(1); G.grp = [1, 2, 3].map((n, i) => ({ n, c: 0, r: [1, 3, 4][i], men: 5, max: 5, x: cx(0), y: cy([1, 3, 4][i]), alive: true, hitT: 0 }));
+G.turn = 1; G.maxTurn = 14; G.smokeLeft = 2; G.artLeft = 1; G.smoke = []; G.level = 1;
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,8 +1,8 @@
 /* Västfronten – service worker: spelen fungerar utan täckning när de laddats en gång */
-const V = "vf-v2";
+const V = "vf-v3";
 const PRE = [
   "/", "/common.js", "/manifest.webmanifest", "/icon-192.png", "/apple-touch-icon.png", "/favicon-32.png",
-  "/hurtgen/", "/eben-emael/", "/verdun/",
+  "/hurtgen/", "/eben-emael/", "/verdun/", "/foy/",
 ];
 
 self.addEventListener("install", e => {
